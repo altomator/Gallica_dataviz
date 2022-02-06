@@ -22,6 +22,7 @@ The graph shows the ratio of the collection component (passed as the -source arg
 Usage:
 ``` 
 >python3 sru_types_partners.py  -s partners  # all partners collections compared to the whole collection
+``` 
 
 ![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.png)
 *Analysis of the partners collection*
