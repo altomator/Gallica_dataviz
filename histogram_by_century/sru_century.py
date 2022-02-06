@@ -31,35 +31,39 @@ def del_outliers(a_dict):
             a_dict.pop(key)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-collection","-c", help="type of collection: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video", required=True)
+parser.add_argument("-type","-t", help="type of documents: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video", required=True)
 parser.add_argument("-source","-s", default="all", help="source of collection: gallica, bnf, partners, integrated, harvested")
 
 args = parser.parse_args()
-print()
+type = args.type
 
 ############################
-# first century to process
-if args.collection=="manuscrit":
-    century_L = 1
-elif args.collection=="carte":
+# types of Gallica documents:  'monographie', 'carte', 'image', 'fascicule', 'manuscrit', 'partition', 'sonore', 'objet', 'video'
+if type=="manuscrit":
+    century_L = 1 # first century to process
+elif type=="carte":
     century_L = 10
-elif args.collection=="image":
+elif type=="image":
     century_L = 1
-elif args.collection=="fascicule":
-        century_L = 15
-elif args.collection=="monographie":
-        century_L = 15
-elif args.collection=="partition":
-        century_L = 10
-elif args.collection=="objet":
-        century_L = 1
-else:
+elif type=="fascicule":
+    century_L = 15
+elif type=="monographie":
+    century_L = 15
+elif type=="partition":
+    century_L = 10
+elif type=="objet":
+    century_L = 1  # we have ancient coins
+elif type=="video":
+    century_L = 20
+elif type=="sonore":
     century_L = 19
+else:
+    print ("... argument -t (type of documents) must be: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video")
+    quit()
+
 # last century to process
 century_H = 21
 
-# types of Gallica documents:  'monographie', 'carte', 'image', 'fascicule', 'manuscrit', 'partition', 'sonore', 'objet', 'video'
-type = args.collection
 
 # source of collections
 if args.source=="partners": # source != bnf
