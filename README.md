@@ -44,3 +44,16 @@ Usage:
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
 *Analysis of the whole collection*
 
+## Histogram by OCR presnce
+
+This analysis is also based on the "century" facet of Gallica and show the OCRed part of the collection.
+It only operates on specific types: monography, periodical, manuscript, score.
+
+Usage:
+``` 
+>python3 sru_ocr.py -t monographie -s gallica # analysis of the BnF + integrated partners collections
+>python3 sru_ocr.py -t monographie  # analysis of the whole collection
+```
+
+![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
+*Analysis of the whole collection*
