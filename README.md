@@ -25,7 +25,6 @@ Usage:
 ```
 
 ![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century/monographie_by_CENTURY.png)
-
 *Analysis of the BnF + integrated partners collections*
 
 ## Histogram by date of on-line publication
@@ -38,7 +37,6 @@ Usage:
 >python3 sru_online_pub_date.py -c monographie  # analysis of the whole collection
 ```
 
-![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_CENTURY.png)
-
+![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
 *Analysis of the whole collection*
 
