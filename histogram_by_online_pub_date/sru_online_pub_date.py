@@ -19,12 +19,17 @@ def autopct_generator(limit):
 #https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&exactSearch=false&collapsing=false&version=1.2&query=(dc.type%20all%20%22monographie%22)%20and%20(indexationdate%3C=%222022/01/31%22)&suggest=10&keywords=
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-collection","-c", help="type of collection: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video", required=True)
+parser.add_argument("-type","-t", help="type of collection: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video", required=True)
 parser.add_argument("-source","-s", default="all", help="source of collection: all, gallica, bnf, integrated, harvested")
 args = parser.parse_args()
 
 ##################
-type = args.collection # 'monographie', 'carte', 'image', 'fascicule', 'manuscrit', 'partition', 'sonore', 'objet', 'video'
+if args.type in ['monographie', 'carte', 'image', 'fascicule', 'manuscrit', 'partition', 'sonore', 'objet', 'video']:
+    type = args.type
+else:
+    print ("... argument -t (type of documents) must be: monographie, manuscrit, fascicule, partition, carte, image, sonore, objet, video")
+    quit()
+    
 start=2007 # no production data available before 2007
 end=2023
 years=[]
@@ -32,15 +37,15 @@ result=[]
 result_OCR=[]
 collection={}
 query=''
+ocr=False
 
 
 ############################
-ocr=False
-if args.collection=="fascicule":
+if type=="fascicule":
         ocr=True
-elif args.collection=="monographie":
+elif type=="monographie":
         ocr=True
-elif args.collection=="partition":
+elif type=="partition":
         ocr=True
 
 # source of collections
@@ -63,7 +68,7 @@ else:
     print ("... argument -s (source of collection) must be: all, gallica, bnf, partners, integrated, harvested")
     quit()
 
-if args.source=="harvested":
+if args.source=="harvested": # no ocr for harvested partners!
     ocr=False
 
 OUT = type+"_by_ONLINE.json"
