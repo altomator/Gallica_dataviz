@@ -14,6 +14,18 @@ and various criteria:
 
 All scripts generate a graph and JSON data.
 
+## Pie of types of documents 
+
+This analysis is based on the Gallica types of documents: monography, periodical, manuscript, map, score, image, object, video, sound.
+The graph shows the ratio of the collection component (passed as the -source argument) and the entire collection. 
+
+Usage:
+``` 
+>python3 sru_types_partners.py  -s partners  # all partners collections compared to the whole collection
+
+![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.png)
+*Analysis of the partners collection*
+
 ## Histogram by century
 
 This analysis is based on the "century" facet of Gallica, the coverage of which may vary depending on the component of the collection studied and the type of documents. This coverage is provided (%).
