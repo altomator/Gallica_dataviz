@@ -5,6 +5,7 @@ Theses Python scripts perform an analysis of the Gallica collection relatively t
 - BnF's collection 
 - BnF's digitisation partners (their documents are integrated into the Gallica repository)
 - BnF's harvested partners (their documents are not integrated, only referenced by their bibliographic record)
+
 and various criteria:
 - ocerized/not ocerized
 - collection types (monography, manuscript, etc.)
