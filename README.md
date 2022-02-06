@@ -1,6 +1,13 @@
 # Gallica_dataviz
 Datavisualisation of Gallica's digital collections
 
+Thses scripts perform an analysis of the Gallica collection to its components:
+- Bnf Colelction
+-
+and various criteria:
+- OCR
+- collection types
+
 ## Histogram by century
 
 Usage:
