@@ -16,7 +16,9 @@ All scripts generate a graph and JSON data.
 
 ## Histogram by century
 
-This analysis is based on the "century" facet of Gallica, the coverage of which may vary depending on the component of the collection studied and the type of documents.
+This analysis is based on the "century" facet of Gallica, the coverage of which may vary depending on the component of the collection studied and the type of documents. This coverage is provided (%).
+
+The graph shows the ratio of the collection component (passed as the -source argument) to the entire collection. If no -source argument is provided, the whole collection is analyzed.
 
 Usage:
 ``` 
