@@ -15,7 +15,7 @@ and various criteria:
 All scripts leverage the [Gallica SRU API](https://api.bnf.fr/fr/api-gallica-de-recherche) and generate a graph and JSON data.
 
 Warning: 
-- Some types of documents can be catalogued with the concept of multi-volume documents (books, scores, manuscripts, sound recordings). With the Gallica SRU API, the `collapsing=false` parameter allows to "flatten" these aggregates. These scripts apply `collapsing=false by default.
+- Some types of documents can be catalogued with the concept of multi-volume documents (books, scores, manuscripts, sound recordings). With the Gallica SRU API, the `collapsing=false` parameter allows to "flatten" these aggregates. These scripts apply `collapsing=false` by default.
 - Gallica's quantity information page applies various rules for counting numbers of documents that may differ from the SRU API results (maps, images, objects: the number of scanned pages is counted).
 
 
