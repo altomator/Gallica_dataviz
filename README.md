@@ -1,12 +1,15 @@
 # Gallica_dataviz
 Datavisualisation of Gallica's digital collections
 
-Thses scripts perform an analysis of the Gallica collection to its components:
-- Bnf Colelction
--
+Theses scripts perform an analysis of the Gallica collection relatively to its components:
+- BnF's collection 
+- BnF's digitisation partners (their documents are integrated into the Gallica repository)
+- harvested partners (their documents are not integrated, only referenced by their bibliographic record)
 and various criteria:
-- OCR
-- collection types
+- ocerized/not ocerized
+- collection types (monography, manuscript, etc.)
+- publication date (century)
+- date of on-line publication
 
 ## Histogram by century
 
