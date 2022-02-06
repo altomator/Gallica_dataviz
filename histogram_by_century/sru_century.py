@@ -64,7 +64,6 @@ else:
 # last century to process
 century_H = 21
 
-
 # source of collections
 if args.source=="partners": # source != bnf
     provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20'
@@ -88,6 +87,7 @@ else:
     print ("... argument -s (source of collection) must be: all, gallica, bnf, partners, integrated, harvested")
     quit()
 
+print (" ---------\n requesting documents from: ",source)
 
 centuries=[] #['1', '2', '3', '4','5','6','7','8','9','10', '11', '12', '13', '14','15','16','17','18','19','20','21',]
 result={}
