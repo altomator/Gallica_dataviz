@@ -26,6 +26,8 @@ Usage:
 
 ![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century/monographie_by_CENTURY.png)
 
+*Analysis of the BnF + integrated partners collections*
+
 ## Histogram by date of on-line publication
 
 This analysis is based on the "indexationdate" facet of Gallica. This data is only available from 2007.
@@ -33,7 +35,10 @@ This analysis is based on the "indexationdate" facet of Gallica. This data is on
 Usage:
 ``` 
 >python3 sru_online_pub_date.py -c monographie -s gallica # analysis of the BnF + integrated partners collections
->python3 sru_century.py -c monographie  # analysis of the whole collection
+>python3 sru_online_pub_date.py -c monographie  # analysis of the whole collection
 ```
 
-![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century/monographie_by_CENTURY.png)
+![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_CENTURY.png)
+
+*Analysis of the whole collection*
+
