@@ -22,8 +22,8 @@ The graph shows the ratio of the collection component (passed as the -source arg
 
 Usage:
 ``` 
->python3 sru_century.py -c monographie -s gallica # analysis of the BnF + integrated partners collections
->python3 sru_century.py -c monographie  # analysis of the whole collection
+>python3 sru_century.py -t monographie -s gallica # analysis of the BnF + integrated partners collections
+>python3 sru_century.py -t monographie  # analysis of the whole collection
 ```
 
 ![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century/monographie_by_CENTURY.png)
@@ -37,8 +37,8 @@ The graph shows the ratio of the collection component (passed as the -source arg
 
 Usage:
 ``` 
->python3 sru_online_pub_date.py -c monographie -s gallica # analysis of the BnF + integrated partners collections
->python3 sru_online_pub_date.py -c monographie  # analysis of the whole collection
+>python3 sru_online_pub_date.py -t monographie -s gallica # analysis of the BnF + integrated partners collections
+>python3 sru_online_pub_date.py -t monographie  # analysis of the whole collection
 ```
 
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
