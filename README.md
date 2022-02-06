@@ -31,8 +31,11 @@ Usage:
 >python3 sru_types_partners.py   # analysis of the whole collection
 ``` 
 
-![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.png)
+![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES_partners.png)
 *Analysis of the partners collection*
+
+![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.jpg)
+*Analysis of the whole collection*
 
 ## Histogram by century
 
