@@ -33,6 +33,8 @@ Usage:
 
 This analysis is based on the "indexationdate" facet of Gallica. This data is only available from 2007.
 
+The graph shows the ratio of the collection component (passed as the -source argument) to the entire collection. If no -source argument is provided, the whole collection is analyzed. Considering the type of documents, the OCRed part of collection is also provided.
+
 Usage:
 ``` 
 >python3 sru_online_pub_date.py -c monographie -s gallica # analysis of the BnF + integrated partners collections
