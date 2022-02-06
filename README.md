@@ -1,5 +1,5 @@
 # Gallica_dataviz
-Datavisualisation of Gallica's digital collections
+  *Datavisualisation of Gallica's digital collections*
 
 Theses scripts perform an analysis of the Gallica collection relatively to its components:
 - BnF's collection 
