@@ -11,8 +11,9 @@ and various criteria:
 - type of documents (monography, manuscript, images, etc.)
 - publication date (century)
 - date of on-line publication
+- digitization programs
 
-All scripts leverage the [Gallica SRU API](https://api.bnf.fr/fr/api-gallica-de-recherche) and generate a graph and JSON data.
+All scripts leverage the [Gallica SRU API](https://api.bnf.fr/fr/api-gallica-de-recherche) and generate a graph (optional) and JSON or XML data.
 
 Warning: 
 - Some types of documents can be catalogued with the concept of multi-volume documents (books, scores, manuscripts, sound recordings). With the Gallica SRU API, the `collapsing=false` parameter allows to "flatten" these aggregates. These scripts apply `collapsing=false` by default.
@@ -27,8 +28,8 @@ The graph shows the ratio of the collection component (passed as the -source arg
 
 Usage:
 ``` 
->python3 sru_types.py  -s partners  # all partners collections compared to the whole collection
->python3 sru_types.py   # analysis of the whole collection
+>python3 SRU_types.py  -source partners  # all partners collections compared to the whole collection
+>python3 SRU_types.py  -chart # analysis of the whole collection + chart
 ``` 
 
 ![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES_partners.png)
