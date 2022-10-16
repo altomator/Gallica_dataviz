@@ -40,6 +40,17 @@ Usage:
 
 *Analysis of the whole collection*
 
+## Pie chart by digitization programs
+
+This analysis is dealing with two major digitization programs: 'Indisponibles du XXe siècle' and 'Proquest'. 
+The pie shows the ratio of the programs components relatively to the entire collection. The OCRed portion is also computed.
+
+Usage:
+``` 
+>python3 SRU_programs.py  -type monographie   # types of document : monographie
+``` 
+
+
 ## Histogram by century
 
 This analysis is based on the "century" facet of Gallica, the coverage of which may vary depending on the component of the collection studied and the type of documents. This coverage is provided (%).
@@ -87,7 +98,7 @@ Usage:
 
 *Analysis of the BnF + integrated partners collections*
 
-## Histogram by digitization programs
+
 
 ## Generating HTML charts with BaseX 
 
