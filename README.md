@@ -96,3 +96,6 @@ The BaseX subfolders include a HTML rendition of the charts using the Highcharts
 1. A .sh script generates all the XML data with call to the Python scripts describe above. Then anoter Python script populates some BaseX databases thanks to the BaseXClient package.
 2. Xquery scripts can then generate the HTML pages.
 
+![analysis of the BnF + integrated partners collections relatively to documents types](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/highcharts.jpg)
+
+*Highcharts example*
