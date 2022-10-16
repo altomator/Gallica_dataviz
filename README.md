@@ -1,13 +1,13 @@
 # Gallica_dataviz
   *Datavisualisation of Gallica's digital collections*
 
-Theses Python scripts perform an analysis of the Gallica collection relatively to its components:
+These Python scripts perform an analysis of the Gallica collection relatively to its components:
 - BnF's collection 
 - BnF's digitisation partners (their documents are integrated into the Gallica's repository)
 - BnF's harvested partners (their documents are not integrated, only referenced by their bibliographic record)
 
 and various criteria:
-- ocerized/not ocerized
+- OCRerized/not OCRerized
 - type of documents (monography, manuscript, images, etc.)
 - publication date (century)
 - date of on-line publication
