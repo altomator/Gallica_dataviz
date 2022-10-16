@@ -1,13 +1,13 @@
 # Gallica_dataviz
   *Datavisualisation of Gallica's digital collections*
 
-Theses Python scripts perform an analysis of the Gallica collection relatively to its components:
+These Python scripts perform an analysis of the Gallica collection relatively to its components:
 - BnF's collection 
 - BnF's digitisation partners (their documents are integrated into the Gallica's repository)
 - BnF's harvested partners (their documents are not integrated, only referenced by their bibliographic record)
 
 and various criteria:
-- ocerized/not ocerized
+- OCRerized/not OCRerized
 - type of documents (monography, manuscript, images, etc.)
 - publication date (century)
 - date of on-line publication
@@ -33,9 +33,11 @@ Usage:
 ``` 
 
 ![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES_partners.png)
+
 *Analysis of the partners collection*
 
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.jpg)
+
 *Analysis of the whole collection*
 
 ## Histogram by century
@@ -82,4 +84,15 @@ Usage:
 ```
 
 ![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_ocr/monographie_by_OCR.png)
+
 *Analysis of the BnF + integrated partners collections*
+
+## Histogram by digitization programs
+
+## Generating HTML charts with BaseX 
+
+The BaseX subfolders include a HTML rendition of the charts using the Highcharts JS library.
+
+1. A .sh script generates all the XML data with call to the Python scripts describe above. Then anoter Python script populates some BaseX databases thanks to the BaseXClient package.
+2. Xquery scripts can then generate the HTML pages.
+
