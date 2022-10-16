@@ -91,10 +91,10 @@ Usage:
 
 ## Generating HTML charts with BaseX 
 
-The BaseX subfolders include a HTML rendition of the charts using the Highcharts JS library.
+The BaseX subfolders includes a dynamic HTML rendition of the charts using the Highcharts JS library and the BaseX REST feature.
 
-1. A .sh script generates all the XML data with call to the Python scripts describe above. Then anoter Python script populates some BaseX databases thanks to the BaseXClient package.
-2. Xquery scripts can then generate the HTML pages.
+1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script populates some BaseX databases thanks to the BaseXClient package.
+2. Xquery scripts can then generate the HTML pages (REST mode).
 
 ![analysis of the BnF + integrated partners collections relatively to documents types](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/highcharts.jpg)
 
