@@ -9,7 +9,6 @@
 #  - chart
 
 
-
 from bs4 import BeautifulSoup
 import requests
 import matplotlib.pyplot as plt
@@ -20,36 +19,10 @@ import numpy as np
 from datetime import date
 from dicttoxml import dicttoxml
 from matplotlib import cm
-
-
-def output_data(data, source):
-    if args.format=="json":
-        file_name=OUT+source+".json"
-        print ("...writing in: ",file_name)
-        # JSON serialisation
-        json_string = json.dumps(data)
-        with open(file_name, 'w') as outfile:
-            outfile.write(json_string)
-        outfile.close()
-    else:
-        file_name=OUT+source+".xml"
-        print ("...writing in: ",file_name)
-        # XML serialisation
-        xml = dicttoxml(collection, attr_type=False)
-        #encoding = 'utf-8'
-        #str(xml, encoding)
-        with open(file_name, 'w') as outfile:
-            outfile.write(xml.decode("utf-8"))
-        outfile.close()
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-source","-s", default="full", help="Source of collection: full, gallica, bnf, partners, integrated, harvested")
-parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
-parser.add_argument("-format","-f", default="json", help="Data format (json, xml)")
-args = parser.parse_args()
-
+import os
 
 ##################
+OUT_folder = "data/"
 OUT = "gallica_types_"
 types=['periodical','monograph', 'image', 'object','manuscript', 'map', 'music score', 'sound','video']
 types_fr=['fascicule','monographie', 'image', 'objet','manuscrit', 'carte', 'partition', 'sonore','video']
@@ -62,6 +35,35 @@ collection={}
 total=0
 total_p=0
 
+def output_data(data, source):
+    if args.format=="json":
+        file_name=OUT_folder+OUT+source+".json"
+        print ("...writing in: ",file_name)
+        # JSON serialisation
+        json_string = json.dumps(data)
+        with open(file_name, 'w') as outfile:
+            outfile.write(json_string)
+        outfile.close()
+    else:
+        file_name=OUT_folder+OUT+source+".xml"
+        print ("...writing in: ",file_name)
+        # XML serialisation
+        xml = dicttoxml(collection, attr_type=False)
+        #encoding = 'utf-8'
+        #str(xml, encoding)
+        with open(file_name, 'w') as outfile:
+            outfile.write(xml.decode("utf-8"))
+        outfile.close()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-source","-s", default="full", help="Source of collection: full, gallica, BnF, partners, integrated, harvested")
+parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
+parser.add_argument("-format","-f", default="json", help="Data format (json, xml)")
+args = parser.parse_args()
+
+
+
+
 # source of collections
 if args.source=="partners": # source != bnf
     provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20'
@@ -72,20 +74,27 @@ elif args.source=="harvested": # source != bnf AND consultation = gallica
 elif args.source=="integrated": # source != bnf AND consultation = gallica only (excluding harvested partners)
     provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
     source_fr = 'intégrés'
-elif args.source=="bnf": # source = bnf AND consultation = gallica
+elif args.source=="BnF": # source = bnf AND consultation = gallica
         provenance = '%20and%20%28dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
         source_fr = 'BnF'
 elif args.source=="gallica": #  consultation = gallica (BnF + integrated)
     provenance = '%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
     source_fr = 'BnF et intégrés'
-elif args.source=="full": #  consultation = gallica (BnF + integrated)
+elif args.source=="full": #  all the digital collection
     provenance = ''
     source_fr = 'complète'
 else:
-    print ("... argument -s (source of collection) must be: full, gallica, bnf, partners, integrated, harvested")
+    print ("... argument -s (source of collection) must be: full, gallica, BnF, partners, integrated, harvested")
     quit()
 
 print (" ---------\n** Documents source set on the command line is: ",args.source,"**")
+
+
+# Check whether the specified path exists or not
+isExist = os.path.exists(OUT_folder)
+if not isExist:
+   os.makedirs(OUT_folder)
+   print("...Data are outputed in: ",OUT_folder)
 
 # creating the chart legends
 subgroup_names_legs=[]
@@ -123,8 +132,8 @@ collection['data']['query']['sample'] = query
 collection['data']['query']['date'] = str(date.today())
 collection['data']['query']['collection'] = types
 collection['data']['query']['collection_fr'] = types_fr
-collection['data']['query']['source'] = 'full'
-collection['data']['query']['source_fr'] = 'complète'
+collection['data']['query']['source'] = 'full Gallica'
+collection['data']['query']['source_fr'] = 'tout Gallica'
 collection['data']['query']['total'] = total
 collection['data']['sru'] = result
 
