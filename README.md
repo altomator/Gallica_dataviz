@@ -119,6 +119,6 @@ The BaseX subfolders includes a dynamic HTML rendition of the charts using the H
 
 *Highcharts example: documents types*
 
-![analysis of the BnF + integrated partners collections relatively to provenance](https://github.com/altomator/Gallica_dataviz/blob/main/provenance/highcharts.jpg)
+![analysis of the BnF + integrated partners collections relatively to provenance](https://github.com/altomator/Gallica_dataviz/blob/main/pyramid_by_provenance/provenance.jpg)
 
 *Highcharts example: provenance*
