@@ -50,6 +50,14 @@ Usage:
 >python3 SRU_programs.py  -type monographie   # types of document : monographie
 ``` 
 
+## Pyramid by provenance 
+
+This analysis is dealing with the 3 components of the Gallica collection: the BnF holdings, the digitisation partners (their digital content are integrated into Gallica) and the harvested partners (Gallica only references those content). 
+
+Usage:
+``` 
+>python3 SRU_prov.py
+``` 
 
 ## Histogram by century
 
@@ -109,4 +117,8 @@ The BaseX subfolders includes a dynamic HTML rendition of the charts using the H
 
 ![analysis of the BnF + integrated partners collections relatively to documents types](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/highcharts.jpg)
 
-*Highcharts example*
+*Highcharts example: documents types*
+
+![analysis of the BnF + integrated partners collections relatively to provenance](https://github.com/altomator/Gallica_dataviz/blob/main/provenance/highcharts.jpg)
+
+*Highcharts example: provenance*
