@@ -59,6 +59,8 @@ Usage:
 >python3 SRU_prov.py
 ``` 
 
+(See the last section for an example of a graph.)
+
 ## Histogram by century
 
 This analysis is based on the "century" facet of Gallica, the coverage of which may vary depending on the component of the collection studied and the type of documents. This coverage is provided (%).
