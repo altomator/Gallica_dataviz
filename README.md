@@ -34,7 +34,7 @@ Usage:
 
 ![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES_partners.png)
 
-*Analysis of the partners collection*
+*Analysis of the partners collection relatively to the whole collection*
 
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.jpg)
 
