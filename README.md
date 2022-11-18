@@ -122,7 +122,9 @@ The BaseX subfolders includes a dynamic HTML rendition of the charts using the H
 1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
 2. XQuery scripts can then generate the HTML pages (REST mode).
 
-Example:
+
+### Pie chart for types of documents 
+
 ``` 
 http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 ``` 
@@ -130,6 +132,9 @@ http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 ![analysis of the BnF + integrated partners collections relatively to documents types](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/highcharts.jpg)
 
 *Highcharts example: documents types*
+
+
+### Pyramid by provenance 
 
 ![analysis of the BnF + integrated partners collections relatively to provenance](https://github.com/altomator/Gallica_dataviz/blob/main/pyramid_by_provenance/provenance.jpg)
 
