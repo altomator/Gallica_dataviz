@@ -47,7 +47,7 @@ The pie shows the ratio of the programs components relatively to the entire coll
 
 Usage:
 ``` 
->python3 SRU_programs.py  -type monographie   # types of document : monographie
+>python3 SRU_programs.py  -type monographie   # types of document : monographie (monographs) or périodiques (periodicals)
 ``` 
 
 ## Pyramid by provenance 
