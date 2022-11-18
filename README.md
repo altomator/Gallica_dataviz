@@ -51,9 +51,9 @@ Usage:
 >python3 SRU_programs.py  -type periodical -f xml   
 ``` 
 
-![analysis of the programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono.png)
+![analysis of the digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono.png)
 
-*Analysis of the programs for the monographs collection*
+*Analysis of the digitization programs (monographs collection)*
 
 ## Pyramid by provenance 
 
