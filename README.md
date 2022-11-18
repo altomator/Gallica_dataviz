@@ -42,7 +42,7 @@ Usage:
 
 ## Pie chart by digitization programs
 
-This analysis is dealing with two major digitization programs: 'Indisponibles du XXe siècle' and 'Proquest'. 
+This analysis is dealing with major digitization programs: 'Indisponibles du XXe siècle' and 'Proquest' (for monographs); "Retronews" (for periodical). 
 The pie shows the ratio of the programs components relatively to the entire collection. The OCRed portion is also computed.
 
 Usage:
