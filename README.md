@@ -133,6 +133,11 @@ http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 
 *Highcharts example: documents types*
 
+### Pyramid by programs 
+
+![analysis of the BnF + integrated partners collections relatively to digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono_hc.jpg)
+
+*Highcharts example: digitization programs*
 
 ### Pyramid by provenance 
 
