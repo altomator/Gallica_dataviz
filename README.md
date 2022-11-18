@@ -47,8 +47,12 @@ The pie shows the ratio of the programs components relatively to the entire coll
 
 Usage:
 ``` 
->python3 SRU_programs.py  -type monographie   # types of document : monographie (monographs) or périodiques (periodicals)
+>python3 SRU_programs.py  -type monographie   # types of collection: monographie (monographs) or fascicule (periodicals)
 ``` 
+
+![analysis of the programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono.jpg)
+
+*Analysis of the programs for the monographs collection*
 
 ## Pyramid by provenance 
 
