@@ -135,7 +135,7 @@ http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 
 ### Pyramid by programs 
 
-![analysis of the BnF + integrated partners collections relatively to digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono_hc.jpg)
+![analysis of the BnF + integrated partners collections relatively to digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono_hc.png)
 
 *Highcharts example: digitization programs*
 
