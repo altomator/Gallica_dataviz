@@ -47,7 +47,8 @@ The pie shows the ratio of the programs components relatively to the entire coll
 
 Usage:
 ``` 
->python3 SRU_programs.py  -type monographie   # types of collection: monographie (monographs) or fascicule (periodicals)
+>python3 SRU_programs.py  -type monograph -f xml  # types of collection: monograph or periodical
+>python3 SRU_programs.py  -type periodical -f xml   
 ``` 
 
 ![analysis of the programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono.png)
