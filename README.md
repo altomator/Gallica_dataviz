@@ -34,7 +34,7 @@ Usage:
 
 ![analysis of the partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES_partners.png)
 
-*Analysis of the partners collection*
+*Analysis of the partners collection relatively to the whole collection*
 
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/all_by_TYPES.jpg)
 
@@ -42,13 +42,18 @@ Usage:
 
 ## Pie chart by digitization programs
 
-This analysis is dealing with two major digitization programs: 'Indisponibles du XXe siècle' and 'Proquest'. 
+This analysis is dealing with major digitization programs: 'Indisponibles du XXe siècle' and 'Proquest' (for monographs); "Retronews" (for periodical). 
 The pie shows the ratio of the programs components relatively to the entire collection. The OCRed portion is also computed.
 
 Usage:
 ``` 
->python3 SRU_programs.py  -type monographie   # types of document : monographie
+>python3 SRU_programs.py  -type monograph -f xml  # types of collection: monograph or periodical
+>python3 SRU_programs.py  -type periodical -f xml   
 ``` 
+
+![analysis of the digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono.png)
+
+*Analysis of the digitization programs (monographs collection)*
 
 ## Pyramid by provenance 
 
@@ -58,6 +63,8 @@ Usage:
 ``` 
 >python3 SRU_prov.py
 ``` 
+
+(See the last section for an example of a graph.)
 
 ## Histogram by century
 
@@ -115,7 +122,9 @@ The BaseX subfolders includes a dynamic HTML rendition of the charts using the H
 1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
 2. XQuery scripts can then generate the HTML pages (REST mode).
 
-Example:
+
+### Pie chart for types of documents 
+
 ``` 
 http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 ``` 
@@ -123,6 +132,14 @@ http://localhost:8984/rest?run=plotDataviz_donut.xq&target=bnf&locale=en
 ![analysis of the BnF + integrated partners collections relatively to documents types](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_types/highcharts.jpg)
 
 *Highcharts example: documents types*
+
+### Pyramid by programs 
+
+![analysis of the BnF + integrated partners collections relatively to digitization programs](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_programs/mono_hc.png)
+
+*Highcharts example: digitization programs*
+
+### Pyramid by provenance 
 
 ![analysis of the BnF + integrated partners collections relatively to provenance](https://github.com/altomator/Gallica_dataviz/blob/main/pyramid_by_provenance/provenance.jpg)
 
