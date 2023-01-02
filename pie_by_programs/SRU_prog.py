@@ -14,18 +14,14 @@ import json
 import argparse
 import numpy as np
 from datetime import date
+from dicttoxml import dicttoxml
 from matplotlib import cm
+import os
 
 
-def autopct_generator(limit):
-    """Remove percent on small slices."""
-    def inner_autopct(pct):
-        return ('%.1f%%' % pct) if pct > limit else ''
-    return inner_autopct
-
-def output_data(data, source):
+def output_data(data, type, ocr):
     if args.format=="json":
-        file_name=OUT+source+".json"
+        file_name=OUT_folder+OUT+ocr+"_"+type+".json"
         print ("...writing in: ",file_name)
         # JSON serialisation
         json_string = json.dumps(data)
@@ -33,7 +29,7 @@ def output_data(data, source):
             outfile.write(json_string)
         outfile.close()
     else:
-        file_name=OUT+source+".xml"
+        file_name=OUT_folder+OUT+ocr+"_"+type+".xml"
         print ("...writing in: ",file_name)
         # XML serialisation
         xml = dicttoxml(collection, attr_type=False)
@@ -44,111 +40,146 @@ def output_data(data, source):
         outfile.close()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-type","-t", default="all", help="type of collection: fascicule, monographie")
+parser.add_argument("-type","-t", default="all", help="type of collection: periodical, monograph")
 parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
-parser.add_argument("-format","-f", default="json", help="Data format (json, xml)")
+parser.add_argument("-format","-f", default="xml", help="Data format (json, xml)")
 args = parser.parse_args()
 
-if args.type=="monographie":
-    type_name = "Monographie"
-elif args.type=="fascicule":
-    type_name = "Périodique"
+if args.type=="monograph":
+    type_name_fr = "Monographie"
+    type_name = "Monograph"
+    type_req = "monographie"
+    programs=['%20and%20(%20notice%20all%22numérisation des indisponibles%22)','%20and%20(%20notice%20all%22proquest%22)','' ]
+    program_names_fr=['Indisponibles du 20e','Proquest','Autres']
+    program_names=['Indisponibles du 20e','Proquest','Other']
+elif args.type=="periodical":
+    type_name_fr = "Périodique"
+    type_name = "Periodical"
+    type_req = "fascicule"
+    programs=['%20and%20(%20notice%20all%22Presse Ancienne RetroNews%22)','']
+    program_names_fr=['Retronews','Autres']
+    program_names=['Retronews','Other']
 else:
-    print ("... argument -t (type of documents) must be: monographie, fascicule")
+    print ("... argument -t (type of documents) must be: periodical, monograph")
     quit()
 
+#  consultation = gallica (BnF + integrated)
+provenance = '%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
+source = 'BnF and integrated'
+source_fr = 'BnF et intégrés'
+
+
 ##################
-#types=['fascicule','monographie']
+SRU = "https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query="
+OUT_folder = "data/"
 OUT = "gallica_programs_"
-t=args.type
-programs=['%20and%20(%20notice%20all%22numérisation des indisponibles%22)','%20and%20(%20notice%20all%22proquest%22)','' ]
-program_names=['Indisponibles du 20e','Proquest','Autres']
 query=''
 result=[]
 result_p=[]
+result_inner=[]
 sources=[]
+searchs=[]
 collection={}
 total=0
 total_p=0
 
-#  consultation = gallica (BnF + integrated)
-provenance = '%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
-source = 'BnF et intégrés'
+
+
+# Check whether the specified path exists or not
+isExist = os.path.exists(OUT_folder)
+if not isExist:
+   os.makedirs(OUT_folder)
+   print("...Data are outputed in: ",OUT_folder)
 
 print (" ---------\n** Documents type set on the command line is: ",type_name,"**")
 
 subgroup_names_legs=[]
-for p in program_names:
+for p in program_names_fr:
     subgroup_names_legs.append(p+" : sans ocr")
     subgroup_names_legs.append(p+" : avec ocr")
 
-#['mono:autre', 'mono:'+source, 'image:autre', 'image:'+source, 'manuscrit:autre', 'manuscrit:'+source,'carte:autre', 'carte:'+source, 'fascicule:autre', 'fascicule:'+source]
-
 
 # querying all documents
-print ("---------\nQuerying documents type: ", t, "\n")
+print ("---------\nQuerying documents type: ", type_req, "\n")
 for p in programs:
-  print (" requesting program:", p)
-  query = 'https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query=(dc.type%20all%20%22'+t+'%22)'+provenance+p
+  print (" requesting program: ", p)
+  search = '(dc.type%20all%20%22'+type_req+'%22)'+ provenance + p
+  query = SRU + search
   page = requests.get(query) # Getting page HTML through request
   soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
   te=int(soup.find("numberOfRecords").get_text())
   print (te)
   result.append(te)
+  searchs.append(search)
 print (" ---------\n SRU query sample:", query)
 
 total = result[-1] # total number of documents
-total_p = sum(result) -total   #total number of documents form program
+total_p = sum(result) - total   #total number of documents from programs
 result[-1] = total - total_p # no-program documents
 
 print (" --------- raw data from the SRU API:\n" , result)
-
 collection['data'] = {}
 collection['data']['query'] = {}
-collection['data']['query']['sample'] = query
+collection['data']['query']['sample_url'] = query
 collection['data']['query']['date'] = str(date.today())
-collection['data']['query']['collection'] = t
+collection['data']['query']['collection'] = program_names
+collection['data']['query']['collection_fr'] = program_names_fr
+collection['data']['query']['target'] = type_name
+collection['data']['query']['target_fr'] = type_name_fr
 collection['data']['query']['source'] = source
+collection['data']['query']['source_fr'] = source_fr
+collection['data']['query']['search'] = searchs
 collection['data']['query']['total'] = total
 collection['data']['sru'] = result
-collection['data']['programs'] = programs
 
-output_data(collection, "full")
-collection={}
+output_data(collection, args.type, "full")
 
 # Now querying OCRed documents
-print ("---------\nQuerying OCRed documents type:", t,"\n")
+print ("---------\nQuerying OCRed documents type:", type_req,"\n")
 i=0
+collection={}
+searchs=[]
+
 for p in programs:
   print ("  requesting program: ", p)
-  query = 'https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query=(dc.type%20all%20%22'+t+'%22)%20and%20(ocr.quality%20all%20"Texte%20disponible")'+provenance+p
+  search = '(dc.type%20all%20%22'+type_req+'%22)%20and%20(ocr.quality%20all%20%22Texte%20disponible%22)' + provenance + p
+  query = SRU + search
   page = requests.get(query) # Getting page HTML through request
   soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
   te=int(soup.find("numberOfRecords").get_text())
   print (te)
-  result_p.append(result[i] - te) # all - ocred
+  result_inner.append(result[i] - te) # all - ocred
+  result_inner.append(te)
   result_p.append(te)
+  searchs.append(search)
   # creating labels
   sources.append(' ')
   sources.append(("OCR: \n{:.1f}%".format(te/result[i]*100)) if te/result[i] > 0.05 else '')
   i+=1
 print (" ---------\n SRU query sample:", query)
 
-#total_ocr = result_p[-1] # total number of documents
-total_ocr_p = sum(result_p)
-#result_p[-1] = total_ocr - total_ocr_p # no-program documents
+total_ocr = result_p[-1] # total number of documents with OCR
+total_ocr_p = sum(result_p) - total_ocr #total number of OCRed documents from programs
+result_p[-1] = total_ocr - total_ocr_p # no-program documents
 print (" --------- raw data from the SRU API:\n" , result_p)
 
-collection['OCRed'] = {}
-collection['OCRed']['query'] = {}
-collection['OCRed']['query']['sample'] = query
-collection['OCRed']['query']['date'] = str(date.today())
-collection['OCRed']['query']['collection'] = t
-collection['OCRed']['query']['source'] = source
-collection['OCRed']['query']['total'] = total_ocr_p
-collection['OCRed']['data'] = result_p
+collection['data'] = {}
+collection['data']['query'] = {}
+collection['data']['query']['sample_url'] = query
+collection['data']['query']['total_url'] = '(dc.type%20all%20%22'+type_req+'%22)%20and%20(ocr.quality%20all%20%22Texte%20disponible%22)' + provenance
+collection['data']['query']['date'] = str(date.today())
+collection['data']['query']['collection'] = program_names
+collection['data']['query']['collection_fr'] = program_names_fr
+collection['data']['query']['target'] = type_name
+collection['data']['query']['target_fr'] = type_name_fr
+collection['data']['query']['source'] = source
+collection['data']['query']['source_fr'] = source_fr
+collection['data']['query']['search'] = searchs
+collection['data']['query']['ocr'] = 'y'
+collection['data']['query']['total'] = total_ocr_p
+collection['data']['sru'] = result_p
 
-output_data(collection, "ocr")
+output_data(collection, args.type, "ocr")
 
 print (" ---------\n total documents:", total)
 
@@ -171,8 +202,8 @@ ax.axis('equal')
 mypie, _ = ax.pie(result, radius=1.2,  colors=outer_colors, textprops={'fontsize': 10,'fontweight':'bold'})
 plt.setp( mypie, width=0.5, edgecolor='white')
 
-# Second Ring (inside): all - partners
-mypie2, _ = ax.pie(result_p, radius=1.2-0.3,
+# Second Ring (inside): all - ocr
+mypie2, _ = ax.pie(result_inner, radius=1.2-0.3,
 labels=sources, labeldistance=0.7, colors=inner_colors, textprops={'fontsize': 8,'fontweight':'bold'})
 plt.setp( mypie2, width=0.7, edgecolor='white')
 plt.margins(0,0)
@@ -191,10 +222,10 @@ for i, p in enumerate(mypie):
     horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
     connectionstyle = "angle,angleA=0,angleB={}".format(ang)
     kw["arrowprops"].update({"connectionstyle": connectionstyle})
-    ax.annotate(program_names[i]+" : \n{:.1f}% ({})".format(result[i]/total*100,result[i]), xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+    ax.annotate(program_names_fr[i]+" : \n{:.1f}% ({})".format(result[i]/total*100,result[i]), xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
                 horizontalalignment=horizontalalignment, **kw)
 
-plt.title('Part des collections \''+type_name+ "\' sous programme (source : \'"+source+ "\'), total : "+str(total_p)+' ('+"{:.1f}%".format(total_p/total*100)+')\nrelativ. à la collection, total : '+str(total)+' - Source : API Gallica SRU')
+plt.title('Part des collections \''+type_name+ "\' sous programme (source : \'"+source_fr+ "\'), total : "+str(total_p)+' ('+"{:.1f}%".format(total_p/total*100)+')\nrelativ. à la collection, total : '+str(total)+' - Source : API Gallica SRU')
 plt.show()
 
 

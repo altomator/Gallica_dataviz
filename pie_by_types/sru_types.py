@@ -22,6 +22,7 @@ from matplotlib import cm
 import os
 
 ##################
+SRU = "https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query="
 OUT_folder = "data/"
 OUT = "gallica_types_"
 types=['periodical','monograph', 'image', 'object','manuscript', 'map', 'music score', 'sound','video']
@@ -31,6 +32,7 @@ result=[]
 result_p=[]
 result_inner=[]
 sources=[]
+searchs=[]
 collection={}
 total=0
 total_p=0
@@ -56,35 +58,33 @@ def output_data(data, source):
         outfile.close()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-source","-s", default="full", help="Source of collection: full, gallica, BnF, partners, integrated, harvested")
+parser.add_argument("-source","-s", default="full", help="Source of collection: full, bnf_and_integrated, bnf, partners, integrated, harvested")
 parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
 parser.add_argument("-format","-f", default="json", help="Data format (json, xml)")
 args = parser.parse_args()
 
 
-
-
 # source of collections
 if args.source=="partners": # source != bnf
-    provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20'
+    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20'
     source_fr = 'partenaires'
 elif args.source=="harvested": # source != bnf AND consultation = gallica
-    provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28not%20provenance%20adj%20%22bnf.fr%22%29'
+    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28not%20provenance%20adj%20%22bnf.fr%22%29'
     source_fr = 'moissonnés'
 elif args.source=="integrated": # source != bnf AND consultation = gallica only (excluding harvested partners)
-    provenance = '%20and%20%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
+    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
     source_fr = 'intégrés'
-elif args.source=="BnF": # source = bnf AND consultation = gallica
-        provenance = '%20and%20%28dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
+elif args.source=="bnf": # source = bnf AND consultation = gallica
+        provenance = '%28dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
         source_fr = 'BnF'
-elif args.source=="gallica": #  consultation = gallica (BnF + integrated)
-    provenance = '%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
+elif args.source=="bnf_and_integrated": #   BnF + integrated documents
+    provenance = '%28provenance%20adj%20%22bnf.fr%22%29'
     source_fr = 'BnF et intégrés'
 elif args.source=="full": #  all the digital collection
     provenance = ''
     source_fr = 'complète'
 else:
-    print ("... argument -s (source of collection) must be: full, gallica, BnF, partners, integrated, harvested")
+    print ("... argument -s (source of collection) must be: full, bnf_partners, BnF, partners, integrated, harvested")
     quit()
 
 print (" ---------\n** Documents source set on the command line is: ",args.source,"**")
@@ -111,7 +111,8 @@ else: # we are requesting all + another source
 # querying all documents
 print ("---------\nQuerying the complete digital collection\n")
 for t in types_fr:
-  query = 'https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&query=(dc.type%20all%20%22'+t+'%22)&collapsing=false'
+  search = '(dc.type%20all%20%22'+t+'%22)'
+  query = SRU + search
   try:
       page = requests.get(query) # Getting page HTML through request
       soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
@@ -119,6 +120,7 @@ for t in types_fr:
       print (" requesting", t,": ",te)
       total += te
       result.append(te)
+      searchs.append(search)
   except:
       print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
       quit()
@@ -128,24 +130,27 @@ print (" --------- raw data from the SRU API:\n" , result)
 
 collection['data'] = {}
 collection['data']['query'] = {}
-collection['data']['query']['sample'] = query
+collection['data']['query']['sample_url'] = query
 collection['data']['query']['date'] = str(date.today())
 collection['data']['query']['collection'] = types
 collection['data']['query']['collection_fr'] = types_fr
-collection['data']['query']['source'] = 'full Gallica'
-collection['data']['query']['source_fr'] = 'tout Gallica'
+collection['data']['query']['source'] = 'full'
+collection['data']['query']['source_fr'] = 'tout'
+collection['data']['query']['search'] = searchs
 collection['data']['query']['total'] = total
 collection['data']['sru'] = result
 
 output_data(collection, "full")
 
 if args.source!='full':
-    # querying partners documents
+    # querying the targeted sub-collection
     collection={}
+    searchs=[]
     print ("---------\nNow querying source:", args.source,"\n")
     i=0
     for t in types_fr:
-        query = 'https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&query=(dc.type%20all%20%22'+t+'%22)'+provenance+'&collapsing=false'
+        search = '(dc.type%20all%20%22'+t+'%22)'+'%20and%20'+provenance
+        query = SRU + search
         try:
             page = requests.get(query) # Getting page HTML through request
             soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
@@ -158,6 +163,7 @@ if args.source!='full':
             result_p.append(te) # partners
             sources.append(' ')
             sources.append(("{:.1f}%".format(te/result[i]*100)) if te/result[i] > 0.05 else '')
+            searchs.append(search)
             i+=1
         except:
             print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
@@ -166,12 +172,14 @@ if args.source!='full':
     print (" --------- raw data from the SRU API:\n" , result_p)
     collection['data'] = {}
     collection['data']['query'] = {}
-    collection['data']['query']['sample'] = query
+    collection['data']['query']['sample_url'] = query
+    collection['data']['query']['total_url'] = provenance
     collection['data']['query']['date'] = str(date.today())
     collection['data']['query']['collection'] = types
     collection['data']['query']['collection_fr'] = types_fr
     collection['data']['query']['source'] = args.source
     collection['data']['query']['source_fr'] = source_fr
+    collection['data']['query']['search'] = searchs
     collection['data']['query']['total'] = total_p
     collection['data']['sru'] = result_p
 
