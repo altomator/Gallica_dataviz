@@ -50,8 +50,8 @@ if args.type=="monograph":
     type_name = "Monograph"
     type_req = "monographie"
     programs=['%20and%20(%20notice%20all%22numérisation des indisponibles%22)','%20and%20(%20notice%20all%22proquest%22)','' ]
-    program_names_fr=['Indisponibles du 20e','Proquest','Autres']
-    program_names=['Indisponibles du 20e','Proquest','Other']
+    program_names_fr=['Indisponibles du 20e','Proquest','autres']
+    program_names=['Indisponibles du 20e','Proquest','other']
 elif args.type=="periodical":
     type_name_fr = "Périodique"
     type_name = "Periodical"
@@ -103,8 +103,9 @@ for p in program_names_fr:
 print ("---------\nQuerying documents type: ", type_req, "\n")
 for p in programs:
   print (" requesting program: ", p)
-  search = '(dc.type%20all%20%22'+type_req+'%22)'+ provenance + p
+  search = '(dc.type%20all%20%22'+type_req+'%22)'+provenance + p
   query = SRU + search
+  #print(query)
   page = requests.get(query) # Getting page HTML through request
   soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
   te=int(soup.find("numberOfRecords").get_text())
@@ -130,9 +131,10 @@ collection['data']['query']['source'] = source
 collection['data']['query']['source_fr'] = source_fr
 collection['data']['query']['search'] = searchs
 collection['data']['query']['total'] = total
+collection['data']['query']['total_p'] = total_p
 collection['data']['sru'] = result
 
-output_data(collection, args.type, "full")
+output_data(collection, args.type, "bnf_and_integrated")
 
 # Now querying OCRed documents
 print ("---------\nQuerying OCRed documents type:", type_req,"\n")
@@ -144,6 +146,7 @@ for p in programs:
   print ("  requesting program: ", p)
   search = '(dc.type%20all%20%22'+type_req+'%22)%20and%20(ocr.quality%20all%20%22Texte%20disponible%22)' + provenance + p
   query = SRU + search
+  #print(query)
   page = requests.get(query) # Getting page HTML through request
   soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
   te=int(soup.find("numberOfRecords").get_text())
@@ -176,10 +179,11 @@ collection['data']['query']['source'] = source
 collection['data']['query']['source_fr'] = source_fr
 collection['data']['query']['search'] = searchs
 collection['data']['query']['ocr'] = 'y'
-collection['data']['query']['total'] = total_ocr_p
+collection['data']['query']['total'] = total_ocr
+collection['data']['query']['total_p'] = total_ocr_p
 collection['data']['sru'] = result_p
 
-output_data(collection, args.type, "ocr")
+output_data(collection, args.type, "bnf_and_integrated_ocr")
 
 print (" ---------\n total documents:", total)
 

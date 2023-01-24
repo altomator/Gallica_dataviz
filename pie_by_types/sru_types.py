@@ -111,8 +111,12 @@ else: # we are requesting all + another source
 # querying all documents
 print ("---------\nQuerying the complete digital collection\n")
 for t in types_fr:
-  search = '(dc.type%20all%20%22'+t+'%22)'
+  if t=="fascicule": # bug Galica : two criteria depending if we're dealing with harvested partners or not
+        search = '(dc.type%20all%20%22fascicule%22%20or%20dc.type%20all%20%22periodique%22)'
+  else:
+        search = '(dc.type%20all%20%22'+t+'%22)'
   query = SRU + search
+  print(query)
   try:
       page = requests.get(query) # Getting page HTML through request
       soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
@@ -149,8 +153,12 @@ if args.source!='full':
     print ("---------\nNow querying source:", args.source,"\n")
     i=0
     for t in types_fr:
-        search = '(dc.type%20all%20%22'+t+'%22)'+'%20and%20'+provenance
+        if t=="fascicule": # bug Galica : two criteria depending if we're dealing with harvested partners or not
+            search = '(dc.type%20all%20%22fascicule%22%20or%20dc.type%20all%20%22periodique%22)'+'%20and%20'+ provenance
+        else:
+            search = '(dc.type%20all%20%22'+t+'%22)'+'%20and%20'+provenance
         query = SRU + search
+        print(query)
         try:
             page = requests.get(query) # Getting page HTML through request
             soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
