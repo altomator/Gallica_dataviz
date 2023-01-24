@@ -105,7 +105,7 @@ Usage:
 >python3 sru_ocr.py -s bnf -c # analysis of the BnF collection
 ```
 
-![analysis of the BnF ocerized collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_ocr/bnf_by_OCR.png)
+![analysis of the BnF ocerized collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_ocr/ocr_bnf.png)
 
 *Analysis of the BnF ocerized collections*
 
