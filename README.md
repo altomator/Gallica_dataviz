@@ -64,7 +64,7 @@ Usage:
 >python3 SRU_prov.py
 ``` 
 
-(See the last section for an example of a graph.)
+(See the last section for an example.)
 
 ## Histogram by century
 
