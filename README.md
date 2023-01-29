@@ -64,7 +64,7 @@ Usage:
 >python3 SRU_prov.py
 ``` 
 
-(See the last section for an example of a graph.)
+(See the last section for an example.)
 
 ## Histogram by century
 
@@ -95,6 +95,19 @@ Usage:
 
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
 *Analysis of the whole collection*
+
+## Pie by OCR presence
+
+This analysis focuses on the ocerized part of the Gallica collection, according to the types of documents and the components of the collection.
+
+Usage:
+``` 
+>python3 sru_ocr.py -s bnf -c # analysis of the BnF collection
+```
+
+![analysis of the BnF ocerized collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_ocr/ocr_bnf.png)
+
+*Analysis of the BnF ocerized collections*
 
 ## Histogram by OCR presence
 
