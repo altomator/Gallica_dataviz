@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" >
+<html>
+<head>
+<title>Gallica : datavisualisation de la collection numérique </title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="tabs.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="tabs.css" />
+<style>
+body
+{
+    margin: 5px;
+    font-size:100%;
+    font-family: arial, sans;
+    background-color: #FFF;
+}
+
+.legal
+{
+    text-align:center;
+    font-size: 80%;
+    color: #666;
+}
+</style>
+</head>
+<script>
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+myLocale = urlParams.get('locale')
+if (myLocale===null) {
+  myLocale="fr"
+}
+console.log("locale: ", myLocale);
+</script>
+<script type="text/javascript" src="localize.js"></script>
+
+<body>
+<div id="content">
+<div id="tabs">
+<ul>
+ <li><a localize-key="li1" href="#"  rel="https://gallica.bnf.fr/GallicaEnChiffres" class="selected"  onclick="loadit(this)">SYNTHESE</a></li>
+ <li><a localize-key="li2" href="#" rel="http://localhost:8984/rest?run=plotDataviz_prov.xq&locale="   onclick="loadit(this)">PROVENANCE</a></li>
+ <li><a localize-key="li3" href="#" rel="http://localhost:8984/rest?run=plotDataviz_partners.xq&target=integrated&locale=" onClick="loadit(this)">PARTENAIRE</a></li>
+ <li><a localize-key="li4" href="#" rel="http://localhost:8984/rest?run=plotDataviz_partners_map.xq&target=integrated&locale=" onClick="loadit(this)">CARTE</a></li>
+ <li><a localize-key="li5" href="#" rel="http://localhost:8984/rest?run=plotDataviz_types_drill.xq&locale=" onClick="loadit(this)">TYPE 1a</a></li>
+ <li><a localize-key="li6" href="#" rel="http://localhost:8984/rest?run=plotDataviz_types_drill_v2.xq&locale=" onClick="loadit(this)">TYPE 1b</a></li>
+ <li><a localize-key="li7" href="#" rel="http://localhost:8984/rest?run=plotDataviz_types.xq&target=bnf_and_integrated&locale=" onClick="loadit(this)">TYPE 2</a></li>
+ <li><a localize-key="li8" href="#" rel="http://localhost:8984/rest?run=plotDataviz_ocr_drill.xq&target=bnf_and_integrated&locale=" onClick="loadit(this)">OCR</a></li>
+ <li><a localize-key="li9" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century.xq&target=bnf_and_integrated&locale=" onClick="loadit(this)">DATE</a></li>
+ <li><a localize-key="li9" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century.xq&target=bnf_and_integrated&era=1&locale=" onClick="loadit(this)">DATE (ant.)</a></li>
+ <li><a localize-key="li9" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century.xq&target=bnf_and_integrated&era=2&locale=" onClick="loadit(this)">DATE (m.-â.)</a></li>
+ <li><a localize-key="li9" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century.xq&target=bnf_and_integrated&era=3&locale=" onClick="loadit(this)">DATE (mod.)</a></li>
+ <li><a localize-key="li9" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century.xq&target=bnf_and_integrated&era=4&locale=" onClick="loadit(this)">DATE (cont.)</a></li>
+ <li><a localize-key="li10" href="#" rel="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&target=bnf&locale=" onClick="loadit(this)">DATE & OCR</a></li>
+ <li><a localize-key="li11" href="#" rel="http://localhost:8984/rest?run=plotDataviz_prog.xq&target=monograph&locale=" onClick="loadit(this)">PROGRAM.</a></li>
+ <li><a localize-key="li12" href="#" rel="history.html/?locale=" onClick="loadit(this)">HISTORIQUE</a></li>
+</ul>
+<iframe id="container"></iframe>
+</div>
+</div>
+</body>
+</html>
