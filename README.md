@@ -74,12 +74,43 @@ The graph shows the ratio of the collection component (passed as the -source arg
 
 Usage:
 ``` 
->python3 sru_century.py -t monographie -s gallica # analysis of the BnF + integrated partners collections
->python3 sru_century.py -t monographie  # analysis of the whole collection
+>python3 SRU_century.py -t monograph -s gallica # analysis of the BnF + integrated partners collections
+>python3 SRU_century.py -t monograph  # default: analysis of the whole collection
 ```
 
 ![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century/monographie_by_CENTURY.png)
 *Analysis of the BnF + integrated partners collections*
+
+## Histogram by century and OCR presence
+
+This analysis is also based on the "century" facet of Gallica and show the OCRed part of the collection.
+It only operates on specific types: monography, periodical, manuscript, score.
+
+As harvested partners can't be ocerized, they are not part of this analysis.
+
+Usage:
+``` 
+>python3 SRU_century_ocr.py -t monograph -s bnf # analysis of the BnF + integrated partners collections
+>python3 SRU_century_ocr.py -t monograph  # default: analysis of the whole collection
+```
+
+![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century_ocr/monographie_by_OCR.png)
+
+*Analysis of the BnF + integrated partners collections*
+
+## Pie by OCR presence
+
+This analysis focuses on the ocerized part of the Gallica collection, according to the types of documents and the components of the collection.
+
+Usage:
+``` 
+>python3 sru_ocr.py -s bnf -c # analysis of the BnF collection
+```
+
+![analysis of the BnF ocerized collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_ocr/ocr_bnf.png)
+
+*Analysis of the BnF ocerized collections*
+
 
 ## Histogram by date of on-line publication
 
@@ -96,35 +127,6 @@ Usage:
 ![analysis of the whole collection](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_online_pub_date/monographie_by_ONLINE.png)
 *Analysis of the whole collection*
 
-## Pie by OCR presence
-
-This analysis focuses on the ocerized part of the Gallica collection, according to the types of documents and the components of the collection.
-
-Usage:
-``` 
->python3 sru_ocr.py -s bnf -c # analysis of the BnF collection
-```
-
-![analysis of the BnF ocerized collection](https://github.com/altomator/Gallica_dataviz/blob/main/pie_by_ocr/ocr_bnf.png)
-
-*Analysis of the BnF ocerized collections*
-
-## Histogram by OCR presence
-
-This analysis is also based on the "century" facet of Gallica and show the OCRed part of the collection.
-It only operates on specific types: monography, periodical, manuscript, score.
-
-As harvested partners can't be ocerized, they are not part of this analysis.
-
-Usage:
-``` 
->python3 sru_ocr.py -t monographie -s gallica # analysis of the BnF + integrated partners collections
->python3 sru_ocr.py -t monographie  # analysis of the whole collection
-```
-
-![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_ocr/monographie_by_OCR.png)
-
-*Analysis of the BnF + integrated partners collections*
 
 
 
@@ -132,7 +134,7 @@ Usage:
 
 The BaseX subfolders includes a dynamic HTML rendition of the charts using the Highcharts JS library and the BaseX REST feature.
 
-1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
+1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script, `create_DB.py` populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
 2. XQuery scripts can then generate the HTML pages (REST mode).
 
 
