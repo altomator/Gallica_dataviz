@@ -20,74 +20,41 @@ from datetime import date
 from dicttoxml import dicttoxml
 from matplotlib import cm
 import os
+import time
+
+# importing constants and vars
+sys.path.append(os.path.abspath("/Users/bnf/Documents/BnF/Dev/Dataviz/Gallica-médiation des collections/_python_stuff"))
+from dataviz import *
 
 ##################
-SRU = "https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query="
-OUT_folder = "data/"
+# output folder
+##################
 OUT = "gallica_types_"
-types=['periodical','monograph', 'image', 'object','manuscript', 'map', 'music score', 'sound','video']
-types_fr=['fascicule','monographie', 'image', 'objet','manuscrit', 'carte', 'partition', 'sonore','video']
-query=''
-result=[]
-result_p=[]
-result_inner=[]
-sources=[]
-searchs=[]
-collection={}
-total=0
-total_p=0
 
-def output_data(data, source):
-    if args.format=="json":
-        file_name=OUT_folder+OUT+source+".json"
-        print ("...writing in: ",file_name)
-        # JSON serialisation
-        json_string = json.dumps(data)
-        with open(file_name, 'w') as outfile:
-            outfile.write(json_string)
-        outfile.close()
-    else:
-        file_name=OUT_folder+OUT+source+".xml"
-        print ("...writing in: ",file_name)
-        # XML serialisation
-        xml = dicttoxml(collection, attr_type=False)
-        #encoding = 'utf-8'
-        #str(xml, encoding)
-        with open(file_name, 'w') as outfile:
-            outfile.write(xml.decode("utf-8"))
-        outfile.close()
+##################
+result_inner=[]
+
+# time out between calls to the API
+timeout=1
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-source","-s", default="full", help="Source of collection: full, bnf_and_integrated, bnf, partners, integrated, harvested")
+parser.add_argument("-source","-s", default="full", help="Source of collection: "+' '.join(sources_coll))
 parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
 parser.add_argument("-format","-f", default="json", help="Data format (json, xml)")
 args = parser.parse_args()
 
-
 # source of collections
-if args.source=="partners": # source != bnf
-    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20'
-    source_fr = 'partenaires'
-elif args.source=="harvested": # source != bnf AND consultation = gallica
-    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28not%20provenance%20adj%20%22bnf.fr%22%29'
-    source_fr = 'moissonnés'
-elif args.source=="integrated": # source != bnf AND consultation = gallica only (excluding harvested partners)
-    provenance = '%28not%20dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
-    source_fr = 'intégrés'
-elif args.source=="bnf": # source = bnf AND consultation = gallica
-        provenance = '%28dc.source%20adj%20%22Biblioth%C3%A8que%20nationale%20de%20France%22%29%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
-        source_fr = 'BnF'
-elif args.source=="bnf_and_integrated": #   BnF + integrated documents
-    provenance = '%28provenance%20adj%20%22bnf.fr%22%29'
-    source_fr = 'BnF et intégrés'
-elif args.source=="full": #  all the digital collection
-    provenance = ''
-    source_fr = 'complète'
-else:
-    print ("... argument -s (source of collection) must be: full, bnf_partners, BnF, partners, integrated, harvested")
+src_target = args.source
+try:
+    src_index = sources_coll.index(src_target)
+    source_fr=sources_coll_fr[src_index]
+    provenance=queries_coll[src_index]
+    print("###################################\n ...processing source: \033[7m", source_fr,"\033[m")
+except:
+    print("# source argument [-s] must be in: ")
+    print (' '.join(sources_coll))
     quit()
-
-print (" ---------\n** Documents source set on the command line is: ",args.source,"**")
 
 
 # Check whether the specified path exists or not
@@ -109,7 +76,7 @@ else: # we are requesting all + another source
 #print(subgroup_names_legs)
 
 # querying all documents
-print ("---------\nQuerying the complete digital collection\n")
+print ("---------\nQuerying the \033[7m complete \033[m digital collection\n")
 for t in types_fr:
   if t=="fascicule": # bug Galica : two criteria depending if we're dealing with harvested partners or not
         search = '(dc.type%20all%20%22fascicule%22%20or%20dc.type%20all%20%22periodique%22)'
@@ -117,6 +84,7 @@ for t in types_fr:
         search = '(dc.type%20all%20%22'+t+'%22)'
   query = SRU + search
   print(query)
+  time.sleep(timeout)
   try:
       page = requests.get(query) # Getting page HTML through request
       soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
@@ -127,7 +95,7 @@ for t in types_fr:
       searchs.append(search)
   except:
       print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
-      quit()
+      sys.exit(-1)
 
 print (" ---------\n SRU query sample:", query)
 print (" --------- raw data from the SRU API:\n" , result)
@@ -144,13 +112,13 @@ collection['data']['query']['search'] = searchs
 collection['data']['query']['total'] = total
 collection['data']['sru'] = result
 
-output_data(collection, "full")
+output_data(args.format,OUT,collection,"full","","")
 
-if args.source!='full':
+if src_target != 'full':
     # querying the targeted sub-collection
     collection={}
     searchs=[]
-    print ("---------\nNow querying source:", args.source,"\n")
+    print ("---------\nNow querying source: \033[7m", src_target,"\033[m\n")
     i=0
     for t in types_fr:
         if t=="fascicule": # bug Galica : two criteria depending if we're dealing with harvested partners or not
@@ -159,6 +127,7 @@ if args.source!='full':
             search = '(dc.type%20all%20%22'+t+'%22)'+'%20and%20'+provenance
         query = SRU + search
         print(query)
+        time.sleep(timeout)
         try:
             page = requests.get(query) # Getting page HTML through request
             soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
@@ -175,7 +144,8 @@ if args.source!='full':
             i+=1
         except:
             print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
-            quit()
+            sys.exit(-1)
+
     print (" ---------\n SRU query sample:", query)
     print (" --------- raw data from the SRU API:\n" , result_p)
     collection['data'] = {}
@@ -190,13 +160,11 @@ if args.source!='full':
     collection['data']['query']['search'] = searchs
     collection['data']['query']['total'] = total_p
     collection['data']['sru'] = result_p
-
-    output_data(collection, args.source)
-
-print (" ---------\n total documents:", total)
+    output_data(args.format,OUT,collection,src_target,"","")
+    print (" ---------\n total documents:", total_p)
 
 if not(args.chart):
-    quit()
+    sys.exit(-1)
 
 # creating a chart
 NUM_TYPES = len(types_fr)

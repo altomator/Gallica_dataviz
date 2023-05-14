@@ -1,6 +1,9 @@
 (:
- Recherche de pages illustrees par les annotations
+   Produce a histogram by documents types and ocr 
 :)
+
+import module namespace gd = "http:/gallicaviz.bnf.fr/" at "../webapp/dataviz_lib.xqm";
+import module namespace gdp = "http:/gallicaviz.bnf.fr/env" at "../webapp/dataviz_env.xqm";
 
 declare namespace functx = "http://www.functx.com";
 
@@ -9,53 +12,17 @@ declare option output:method 'html';
 (: Arguments avec valeurs par defaut :)
 (: cible de l'analyse :)
 declare variable $target as xs:string external := "full"  ;  (: full, bnf_and_integrated, bnf, partners, integrated, harvested  :)
+(: logarithm on y axis:)
 declare variable $log as xs:string external := "false" ;
-
-(: declare variable $types  := ("periodical", "monograph",  "music" )  ; :)
-declare variable $types  := ("periodical", "monograph" )  ;
-(: declare variable $types_fr  := ("fascicule", "monographie", "partition")  ;:)
-declare variable $types_fr  := ("fascicule", "monographie");
-
-declare variable $DBtarget as xs:string  := concat("gallica_century_", $target,"-monograph") ; 
-declare variable $DBprefix as xs:string := "gallica_century_" ;
-
 declare variable $locale as xs:string external := "fr" ; 
 
-      
-(: declare variable $currentDate as xs:date  := current-date(); :)
-
 (: Parameters :)
-(: colors :)
-declare variable $mainColor as xs:string := "#3b9db3" ; (: green  :) 
-declare variable $otherInnerColor as xs:string := "#B8B0AE" ; (: gray :)
-declare variable $innerColor := "red";
-(: Columns colors for  periodical, monograph, manuscript, music score  :)
-declare variable $gallicaColors := (
-    "#128799", 
-    "#149BB1", 
-    "#78B7B7", 
-    "#D6E9E9");
-     
-declare variable $targetLabel := "OCR";
-declare variable $other := if ($locale='fr') then ("sans OCR") else ("no OCR");
-declare variable $full := if ($locale='fr') then ("tout") else ("full");           
-
-declare variable $criteria as xs:string :=  if ($locale='fr') then ("Types") else ("Types") ; (: label of the graph criteria :)
 declare variable $width as xs:integer := 1250 ;
- 
-(: URL Gallica SRU de base :)
-declare variable $SRU as xs:string external := fn:escape-html-uri("https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&amp;exactSearch=false&amp;collapsing=false&amp;query=");
-
-declare function local:evalQuery($query) {
-    let $hits := xquery:eval($query)
-    return $hits
-};
-
-(: return a color for a given document type:)
-declare function local:columnColors($doc_type) {
-    let $foo := map:get( $gallicaColors, $doc_type)
-    return $foo
-};
+declare variable $height as xs:integer := 630 ;
+declare variable $DBtarget as xs:string  := concat("gallica_century_", $target,"-monograph") ;
+declare variable $DBprefix as xs:string := "gallica_century_" ;
+declare variable $begin_OCR as xs:integer := 15 ;
+         
 
 (: construction de la page HTML :)
 declare function local:createOutput($db) {
@@ -63,66 +30,64 @@ declare function local:createOutput($db) {
 {
 let $targetName := if ($locale='fr') then (data($db//source_fr)) else (data($db//source))
 let $processingDate := xs:date($db//date)
-let $date := if ($locale='fr') then (format-date($processingDate, "[D]-[M]-[Y]")) else (format-date($processingDate, "[Y]-[M]-[D]"))
-
-
+let $date := gd:date($processingDate,$locale)
 
 let $title := if ($locale='fr') then (concat ("Analyse par date de publication et OCR pour la provenance : ",$targetName)) else 
 (concat ("Analysis by publication date for provenance: ",$targetName))
-let $subTitle := if ($locale='fr') then (concat('Source : <a href="https://gallica.bnf.fr" target="_default">Gallica</a> et <a href="https://api.bnf.fr/fr/api-gallica-de-recherche" target="_default">API Gallica SRU</a> (', $date,')')) else (concat('Source: <a href="https://gallica.bnf.fr" target="_default">Gallica</a> and <a href="https://api.bnf.fr/fr/api-gallica-de-recherche" target="_default">Gallica SRU API</a> (', $date,')'))
+let $subTitle := gdp:subtitle($date, $locale)
 
 (: data :)
-let $centuries := $db//century/item[position()>=11]
+let $centuries := $db//century/item[position()>=$begin_OCR]
 let $totalData := count($centuries)
-
-let $dataCentury := for $c at $position in $centuries
- let $stringData := concat(' "',data ($c),'"',
+let $categoriesData := for $c at $position in $centuries
+ let $stringData := concat(' "',data($c),gdp:suffix($locale),'"',
     (if ($position != $totalData) then ',') ,codepoints-to-string(10))
   return $stringData
 return
 
-let $collsData := for $t at $pos1 in $types
-  let $totalTypes := count($types)
-  let $DBname := concat($DBprefix,$target,"-",$types[$pos1])
-  let $DBOCRname := concat($DBprefix,$target,"-",$types[$pos1],"-ocr")
+let $collsData := for $t at $pos1 in $gdp:ocrTypes
+  let $totalTypes := count($gdp:ocrTypes)
+  let $DBname := concat($DBprefix,$target,"-",$gdp:ocrTypes[$pos1])
+  let $DBOCRname := concat($DBprefix,$target,"-",$gdp:ocrTypes[$pos1],"-ocr")
   let $db := collection($DBname)
   let $dbOCR := collection($DBOCRname)
-  let $centuryData := $db//sru/item[position()>=11] 
-  let $centuryOCRData := $dbOCR//sru/item[position()>=11] 
+  let $data := $db//sru/item[position()>=$begin_OCR] 
+  let $OCRdata := $dbOCR//sru/item[position()>=$begin_OCR] 
   let $total := $db//total
+  let $totalOCR := $dbOCR//total
   let $totalF := $db//total_with_facet
-  let $totalData := count($centuryData)  
-  let $name := if ($locale='fr') then ($types_fr[$pos1]) else ($t)     
+  let $nData := count($data)  
+  let $name := if ($locale='fr') then ($gdp:ocrTypes_fr[$pos1]) else ($t)     
   let $cover :=  $totalF div $totalData
-  let $urlTargetOCR := $dbOCR//search/item[position()>=11]
+  let $urlTargetOCR := $dbOCR//search/item[position()>=$begin_OCR]
   (: no OCR :)
   let $stringData := concat(' {  
-        name: "',$name,' (', $other, ')', '",
+        name: "',$name,' ',gdp:noOCR($locale), '",
         stack: "',$name,'",
-        color: "',$otherInnerColor,'",  
-        
+        color: "',$gdp:otherInnerColor,'",         
         data: [ ',                             
-           let $tmp := for $c at $pos2 in $centuryData 
-           let $value := data($c)-$centuryOCRData[$pos2]
-            let $url := concat($SRU, data($urlTargetOCR[$pos2]))
+          let $tmp := for $c at $pos2 in $data 
+            let $value := data($c - $OCRdata[$pos2])
+            let $url := concat($gdp:SRU, data($urlTargetOCR[$pos2]))
+            let $noOCRurl := replace($url,'ocr.','not%20ocr.') 
             return concat('{ y: ', if ($value <= 0) then (0) else ($value), 
             ', totalT: ', $total, ', totalF: ', $totalF, 
-            ', colorType: "',$gallicaColors[$pos1],'"',  
-             ', url: "',$url, '"}',            
+            ', colorType: "',$gdp:gallicaTypesColors($name),'"',  
+             ', url: "',$noOCRurl, '"}',            
               (if ($pos2 != $totalData) then ',') ,codepoints-to-string(10))
             return string-join($tmp,' '),        
       ']},
       {  
-        name: "',$name,' (', $targetLabel, ')', '",
+        name: "', gdp:OCR($locale), '",
         stack: "',$name,'",
         color: "url(#custom-pattern-',data($pos1),')",   
-        color: "',$gallicaColors[$pos1],'", 
+        // color: "',$gdp:gallicaTypesColors($t),'",
         data: [ ',                             
-           let $tmp := for $c at $pos2 in $centuryOCRData 
-           let $url := concat($SRU, data($urlTargetOCR[$pos2]))
-            return concat('{ y: ', data($c), 
+           let $tmp := for $c at $pos2 in $OCRdata 
+           let $url := concat($gdp:SRU, data($urlTargetOCR[$pos2]))
+            return concat('{ y: ', $c, 
             ', totalT: ', $total, ', totalF: ', $totalF, 
-            ', colorType: "',$gallicaColors[$pos1],'"',  
+            ', colorType: "',$gdp:gallicaTypesColors($t),'"',  
              ', url: "',$url, '"}',
               
               (if ($pos2 != $totalData) then ',') ,codepoints-to-string(10))
@@ -137,26 +102,55 @@ return
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
 <title>{$title}</title>
+<link rel="stylesheet" type="text/css" href="/static/dataviz.css"></link>
+<style>
+.highcharts-description  {{
+    max-width: {$width}px;
+}}
+.highcharts-figure,
+.highcharts-data-table  {{
+    max-width: {$width}px;
+}}
+.scope-description  {{
+    max-width: {$width}px;
+}}
+</style>
 <script src="/static/he.js"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://highcharts.github.io/pattern-fill/pattern-fill-v2.js"></script>
+
 <script type="text/javascript">
 $(function () {{
   
+function formatNumbers (val,digits) {{
+  if (String('{$locale}') == 'fr') {{
+       sep = ' ' 
+       dec = ','  
+     }} else {{
+       sep = ',' 
+       dec = '.'
+     }}  
+  return Highcharts.numberFormat(val,digits,dec,sep)
+}};
 
 $('#container').highcharts({{
 chart: {{
 	type: "column",
-  backgroundColor: "#EBEBEB",
+  backgroundColor: "{$gdp:backgroundColor}",
 	spacingBottom: 30,
   spacingTop: 30,
   spacingLeft: 10,
   spacingRight: 10,
   // Explicitly tell the width and height of a chart
   width: {$width},
-  height: 630
+  height: {$height},
 }},
 title: {{
-   margin: 50,
+   margin: {$gdp:marginTop},
    style: {{
             fontWeight: 'bold'
         }},
@@ -164,17 +158,35 @@ title: {{
 }},
 xAxis: {{
   categories: [
-      {$dataCentury} 
+      {$categoriesData} 
  ], 
  title: {{
-            text: 'Siècles'
+            text: '{gdp:century($locale)}'
+        }},
+        labels: {{
+            style: {{
+                fontWeight: 'bold'
+            }}
         }}
 }},
 yAxis: {{
-      // type: 'logarithmic',
-        
+        {if ($log != 'false') then ("type: 'logarithmic',") else ()}       
         title: {{
             text: 'Documents'
+        }},
+        labels: {{
+            formatter: function () {{           
+            if (this.value == 0) {{
+                return 0}}
+            else if (Math.trunc(this.value / 1000000) != 0)  {{
+                   return formatNumbers(this.value / 1000000.0 , 1) + "M"
+               }}
+            else {{return formatNumbers(this.value / 1000.0 , 0) + "k"
+                        }}
+                      }},
+            style: {{
+                fontWeight: 'bold'
+            }}
         }}
     }},
 subtitle: {{
@@ -185,17 +197,8 @@ subtitle: {{
 		'{$subTitle}'
 }},
 tooltip: {{
-	formatter: function () {{ 
-     if (String('{$locale}') == 'fr') {{
-       sep = ' '
-       txt = " sur "
-       cv = " couverture date : "      
-     }} else {{
-       sep = ',' 
-       txt = " on "
-       cv = " date coverage: "
-     }}     
-     return  '<b style="color:' + this.point.colorType + '">' + this.series.name + '</b>' + ' : '+ '<b>' + Highcharts.numberFormat(this.point.y, 0, ',',sep) + "</b> (" + Highcharts.numberFormat(this.point.y/this.point.total * 100, 2, ',',sep) + " %)" + "<br></br>&#x2022; total: " + Highcharts.numberFormat(this.point.total, 0, ',',sep)  + "<br></br>&#x2022;" + cv + Highcharts.numberFormat(this.point.totalF/this.point.totalT *100, 0, ',',sep) + " %" ;
+	formatter: function () {{   
+     return  '<b style="color:' + this.point.colorType + '">' + this.series.name + '</b>' + '{gdp:colon($locale)}' + '<b>' + formatNumbers(this.point.y, 0) + "</b> (" + formatNumbers(this.point.y/this.point.total * 100, {$gdp:labelDigits}) + '{gdp:percent($locale)}' + ")" + "<br></br>&#x2022; total" +'{gdp:colon($locale)}' + formatNumbers(this.point.total, 0)  + "<br></br>&#x2022;" + '{gdp:labelDate($locale)}' +'{gdp:colon($locale)}'+ formatNumbers(this.point.totalF/this.point.totalT *100, 0) + '{gdp:percent($locale)}' ;
    }}
 }},
 // patterns for OCR parts
@@ -204,21 +207,21 @@ defs: {{
       'id': 'custom-pattern-1',
       'path': {{
         d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke: '{$gallicaColors[1]}',
+        stroke: '{$gdp:gallicaTypesColors("periodical")}',
         strokeWidth: 4
       }}
     }}, {{
       'id': 'custom-pattern-2',
       'path': {{
         d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[2]}',
+        stroke:  '{$gdp:gallicaTypesColors("monograph")}',
         strokeWidth: 4
       }}
  }}, {{
       'id': 'custom-pattern-3',
       'path': {{
         d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[3]}',
+        stroke:  '{$gdp:gallicaTypesColors("manuscript")}',
         strokeWidth: 4
       }}
     }}, 
@@ -226,56 +229,28 @@ defs: {{
       'id': 'custom-pattern-4',
       'path': {{
         d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[4]}',
-        strokeWidth: 3
-      }}
-}}]
-}},
-// patterns for OCR parts
-defs: {{
-    patterns: [{{
-      'id': 'custom-pattern-1',
-      'path': {{
-        d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke: '{$gallicaColors[1]}',
+        stroke:  '{$gdp:gallicaTypesColors("")}',
         strokeWidth: 4
-      }}
-    }}, {{
-      'id': 'custom-pattern-2',
-      'path': {{
-        d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[2]}',
-        strokeWidth: 4
-      }}
- }}, {{
-      'id': 'custom-pattern-3',
-      'path': {{
-        d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[3]}',
-        strokeWidth: 4
-      }}
-    }}, 
-      {{
-      'id': 'custom-pattern-4',
-      'path': {{
-        d: 'M 0 0 L 10 10 M 9 -1 L 11 1 M -1 9 L 1 11',
-        stroke:  '{$gallicaColors[4]}',
-        strokeWidth: 3
       }}
 }}]
 }},
 plotOptions: {{
-  column: {{
-            stacking: 'normal',
+  column: {{            
+      stacking: 'normal',
             pointPadding: 0.05,
             borderWidth: 1,
             dataLabels: {{
-            enabled: true,
-            style: {{
-            fontWeight: 'normal',
-            fontSize: 8
-        }},
-        }}
+              enabled: true,
+              formatter: function() {{
+              return formatNumbers(this.y,0)
+             }},
+              style: {{
+                    fontSize: {$gdp:labelSmallSize},
+                    color: "{$gdp:labelColor}",
+                    textOutline: "{$gdp:labelOutline}" , 
+                    fontWeight: 'normal'
+         }},
+         }}
         }},
   series: {{
             cursor: 'pointer',
@@ -304,110 +279,18 @@ series: [
 </head>
 }
 <body>
-<style>
-.highcharts-description  {{
-    font-family: Lucida Grande;
-    margin: 10px auto;
-    text-align: center;
-    width: 100%;
-    max-width: {$width}px;
-}}
-.highcharts-figure,
-.highcharts-data-table  {{
-    min-width: 320px;
-    max-width: {$width}px;
-    margin: 1em auto;
-}}
-.scope-description  {{
-    font-family: Lucida Grande;
-    font-weight: bold;
-    background-color: #EBEBEB;
-    margin: 10px auto;
-    margin-top: -10px;
-    padding-top : 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    width: 100%;
-    max-width: {$width}px;
-}}
-.caption {{ color : gray }}
-.flag {{ width : 20px }}
-a {{ text-decoration: none }}
-
-.picto-item {{
-  position: relative;  /*les .picto-item deviennent référents*/
-  cursor: help;
-  border-radius: 50%;
-}}
-
-/* on génère un élément :after lors du survol et du focus :*/
-
-.picto-item:hover:after,
-.picto-item:focus:after {{
-  content: attr(aria-label);  /* on affiche aria-label */
-  position: absolute;
-  top: -2.4em;
-  left: 50%;
-	transform: translateX(-50%); /* on centre horizontalement  */
-  z-index: 1; /* pour s'afficher au dessus des éléments en position relative */
-  white-space: nowrap;  /* on interdit le retour à la ligne*/
-  padding: 5px 14px;
-  background: #413219;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 0.7rem;
-}}
-
-/* on génère un second élément en :before pour la flèche */
-
-[aria-label]:hover:before,
-[aria-label]:focus:before {{
-  content: "▼";
-  position: absolute;
-  top: -1em;
-	left: 50%;
-	transform: translateX(-50%); /* on centre horizontalement  */
-  font-size: 14px;
-  color: #413219;
-}}
-
-/* pas de contour durant le :focus */
-[aria-label]:focus {{
-  outline: none;
-}}
-
-.picto-item {{
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  margin: 3em 2em  1.5em  2e;
-  width: 1.2em;
-  height: 1.2em;
-  color: #413219;
-  background: #A0A0A0;
-  font-size: 0.95rem;
-  text-align: center;
-  text-decoration: none;
-}}
-</style>
-
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
-<script src="https://highcharts.github.io/pattern-fill/pattern-fill-v2.js"></script>
 <figure class="highcharts-figure">
 	<div>
     <div id="container"></div>
 </div>
-{if ($locale='fr') then (<p class="scope-description">Collections : <a title ="Toute la collection Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=full&amp;locale=fr">Tout</a> &#x2022; <a title ="Les documents numériques de la BnF et de ses partenaires consultables dans Gallica"  href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf_and_integrated&amp;locale=fr">BnF et intégrés</a> &#x2022; <a title="Les documents numériques de la BnF" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf&amp;locale=fr">BnF</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF (intégrés et moissonnés)"  href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=partners&amp;locale=fr">partenaires</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF consultables dans Gallica" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=integrated&amp;locale=fr">intégrés</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF référencés dans Gallica" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=harvested&amp;locale=fr">moissonnés</a></p> ) 
+{if ($locale='fr') then (<p class="scope-description">Collections : <a title ="Toute la collection Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=full&amp;locale=fr">Complète</a> &#x2022; <a title ="Les documents numériques de la BnF et de ses partenaires consultables dans Gallica"  href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf_and_integrated&amp;locale=fr">BnF et intégrés</a> &#x2022; <a title="Les documents numériques de la BnF" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf&amp;locale=fr">BnF</a>  &#x2022; <a title ="Les documents numériques des partenaires de la BnF consultables dans Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=integrated&amp;locale=fr">intégrés</a> </p> ) 
 else
-(<p class="scope-description">Collections: <a title ="All the Gallica collection" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=full&amp;locale=en">Full</a> &#x2022; <a title ="Digital documents from BnF and its partners available in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf_and_integrated&amp;locale=en">BnF and integrated</a> &#x2022; <a title ="Digital documents from BnF" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf&amp;locale=en">BnF</a> &#x2022; <a title ="Digital documents from BnF&#8217;s partners (integrated and harvested)" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=partners&amp;locale=en">partners</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners available in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=integrated&amp;locale=en">integrated</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners listed in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target=harvested&amp;locale=en">harvested</a></p>)}
+(<p class="scope-description">Collections: <a title ="All the Gallica collection" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=full&amp;locale=en">All</a> &#x2022; <a title ="Digital documents from BnF and its partners available in Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf_and_integrated&amp;locale=en">BnF and integrated</a> &#x2022; <a title ="Digital documents from BnF" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=bnf&amp;locale=en">BnF</a> &#x2022;  <a title ="Digital documents from the BnF&#8217;s partners available in Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target=integrated&amp;locale=en">integrated</a> &#x2022; </p>)}
 
 <p class="highcharts-description">
  {if ($locale='en') then (
-   <small class="caption"><a class="picto-item" aria-label="Source and documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁</a>  <a class="picto-item" aria-label="This graph analyses the distribution of document types according to the different provenances that make up Gallica." href="#">≡</a> <a  class="picto-item" aria-label="French" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=fr">⚐</a>  <a  class="picto-item" aria-label="Logarithmic scale" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=en&amp;log=true">&#x1f4c8;</a></small>) else
-  (<small class="caption"><a class="picto-item" aria-label="Source et documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁ </a>  <a class="picto-item" aria-label="Ce graphe analyse la répartition par types de documents en fonction des différentes provenances constituant Gallica." href="#">≡</a> <a  class="picto-item" aria-label="English" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=en">⚐</a> <a  class="picto-item" aria-label="Echelle logarithmique" href="http://localhost:8984/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=fr&amp;log=true">&#x1f4c8;</a></small>)}
+   <small class="caption"><a class="picto-item" aria-label="Source and documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁</a>  <a class="picto-item" aria-label="This graph analyses the distribution of document types with OCR according to the publication date." href="#">≡</a> <a  class="picto-item" aria-label="French" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=fr">⚐</a>  </small>) else
+  (<small class="caption"><a class="picto-item" aria-label="Source et documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁ </a>  <a class="picto-item" aria-label="Ce graphe analyse la couverture temporelle (date de publication) de la collection pour les types de documents océrisés." href="#">≡</a> <a  class="picto-item" aria-label="English" href="{$gdp:appPrefix}/rest?run=plotDataviz_century_ocr.xq&amp;target={$target}&amp;locale=en">⚐</a> </small>)}
  </p>
 </figure>
 </body>

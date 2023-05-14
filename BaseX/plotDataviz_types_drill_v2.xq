@@ -14,7 +14,7 @@ declare variable $locale as xs:string external := "fr" ; (: langue: fr/en :)
 
 (: Parameters :)
 declare variable $width as xs:integer := 850 ;
-declare variable $height as xs:integer := 610 ;
+declare variable $height as xs:integer := 630 ;
 
 (: the full collection :)
 declare variable $DBall as xs:string external := "gallica_types_full" ;
@@ -69,7 +69,6 @@ let $collsData := for $c at $position in $colls
     else (if (($c eq "sonore") or ($c eq "sound"))  then 'sliced: true, ' )),'
 				name: "',data($c),'",
 				y: ',data($data[$position]),',
-        color: "',data($gdp:gallicaTypesColors($c)),'",  
         url: "',concat($gdp:SRU,data($urlAll[$position])),'",
 				drilldown: "',data($c),'"        
         }', (if ($position != $totalData) then ',') ,codepoints-to-string(10)
@@ -138,21 +137,57 @@ return
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
 <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+<script src="https://highcharts.github.io/pattern-fill/pattern-fill.js"></script>
 <script type="text/javascript">
 $(function () {{
-// not used anymore
-var pieColors = (function (doc_type) {{
-  var colors = ["#128799", "#149BB1", "#78B7B7",  "#CAC9B8", 
-               "#D6E9E9",
-                "#a5846b", 
-                 "#c2ab9b",
-                  "#B89E8B",
-                "#d5c6ba"
-           ];
-  var colors_types = {{fascicule:"#128799", monographie:"#149BB1t", manuscrit:"#78B7B7", 
-  partition:"#CAC9B8", carte:"#D6E9E", image:"#a5846", objet:"#c2ab9b", son:"#c2ab9b", video:"#c2ab9b"}} ;          
-  return colors_types[doc_type]    
-}}());
+
+ var pieColors = [
+  {{
+    pattern: '/static/img/bpt6k701453s.JPEG', 
+    width: 512,
+    height: 742
+  }},
+  {{
+    pattern: '/static/img/bpt6k1049566j-21.JPEG', 
+    width: 622,
+    height: 426
+  }},                       
+{{
+   pattern: '/static/img/btv1b84489742-f7.JPEG',
+                            width: 600,
+                            height: 604
+  }},
+   {{
+   pattern: '/static/img/btv1b8495644b.JPEG',
+                            width: 650,
+                            height: 576
+  }},
+  {{
+   pattern: '/static/img/btv1b53024261w.jpg',
+                            width: 620,
+                            height: 575
+  }},
+   {{
+   pattern: '/static/img/btv1b10455135w-f2.JPEG',
+                            width: 650,
+                            height: 580
+  }},
+   {{
+   pattern: '/static/img/btv1b53095162g.JPEG',
+                            width: 681,
+                            height: 681
+  }},
+  {{
+   pattern: '/static/img/bpt6k1080644m.JPEG',
+                            width: 610,
+                            height: 611
+  }},
+   {{
+   pattern: '/static/img/bpt6k13219337.JPEG',
+                            width: 680,
+                            height: 609
+  }}
+    ];
 
 function formatNumbers (val,digits) {{
   if (String('{$locale}') == 'fr') {{
@@ -202,7 +237,16 @@ tooltip: {{
       return  '<b>' + this.point.name + '</b>' + ' :<br></br>'+ formatNumbers(this.y, 0) + '{gdp:labelOn($locale)}' + formatNumbers(this.total, 0);
    }}
 }},
-
+// patterns for OCR parts
+defs: {{
+    patterns: [
+       {{
+      'id': 'custom-pattern-img',
+      image:
+        'https://gallica.bnf.fr/ark:/12148/bpt6k1523583v/f123.medres'
+      
+}}]
+}},
 plotOptions: {{
   series: {{
             cursor: 'pointer',
@@ -221,7 +265,9 @@ plotOptions: {{
 		startAngle: 90,
 		allowPointSelect: true,
 		cursor: "pointer",
+    colors: pieColors,
 		dataLabels: {{
+      //connectorColor: 'grey',
 			enabled: true,
 			formatter: function () {{
      return '<a target="_blank" href="' + this.point.url + '">'+ this.point.name  + '{gdp:colon($locale)}' + formatNumbers(this.point.percentage,{$gdp:labelDigits}) + '{gdp:percent($locale)}' + '</a>'; 

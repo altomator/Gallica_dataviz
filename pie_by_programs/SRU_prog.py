@@ -17,7 +17,11 @@ from datetime import date
 from dicttoxml import dicttoxml
 from matplotlib import cm
 import os
+import sys
 
+# importing constants and vars
+sys.path.append(os.path.abspath("/Users/bnf/Documents/BnF/Dev/Dataviz/Gallica-médiation des collections/_python_stuff"))
+from dataviz import *
 
 def output_data(data, type, ocr):
     if args.format=="json":
@@ -39,6 +43,7 @@ def output_data(data, type, ocr):
             outfile.write(xml.decode("utf-8"))
         outfile.close()
 
+### MAIN ###
 parser = argparse.ArgumentParser()
 parser.add_argument("-type","-t", default="all", help="type of collection: periodical, monograph")
 parser.add_argument("-chart","-c", action="store_true", help="Produce a graph")
@@ -49,7 +54,7 @@ if args.type=="monograph":
     type_name_fr = "Monographie"
     type_name = "Monograph"
     type_req = "monographie"
-    programs=['%20and%20(%20notice%20all%22numérisation des indisponibles%22)','%20and%20(%20notice%20all%22proquest%22)','' ]
+    programs=['%20and%20(%20notice%20all%22numérisation des indisponibles%22)','%20and%20(%20notice%20all%20%22proquest%22)','' ]
     program_names_fr=['Indisponibles du 20e','Proquest','autres']
     program_names=['Indisponibles du 20e','Proquest','other']
 elif args.type=="periodical":
@@ -63,27 +68,15 @@ else:
     print ("... argument -t (type of documents) must be: periodical, monograph")
     quit()
 
-#  consultation = gallica (BnF + integrated)
+#  target = gallica (BnF + integrated)
 provenance = '%20and%20%28provenance%20adj%20%22bnf.fr%22%29'
 source = 'BnF and integrated'
 source_fr = 'BnF et intégrés'
 
-
 ##################
-SRU = "https://gallica.bnf.fr/SRU?version=1.2&operation=searchRetrieve&collapsing=false&query="
-OUT_folder = "data/"
+# output folder
+##################
 OUT = "gallica_programs_"
-query=''
-result=[]
-result_p=[]
-result_inner=[]
-sources=[]
-searchs=[]
-collection={}
-total=0
-total_p=0
-
-
 
 # Check whether the specified path exists or not
 isExist = os.path.exists(OUT_folder)
@@ -91,27 +84,30 @@ if not isExist:
    os.makedirs(OUT_folder)
    print("...Data are outputed in: ",OUT_folder)
 
-print (" ---------\n** Documents type set on the command line is: ",type_name,"**")
+print (" --------------\n** Documents type set on the command line is: ",type_name,"**")
 
 subgroup_names_legs=[]
 for p in program_names_fr:
     subgroup_names_legs.append(p+" : sans ocr")
     subgroup_names_legs.append(p+" : avec ocr")
 
-
 # querying all documents
 print ("---------\nQuerying documents type: ", type_req, "\n")
 for p in programs:
-  print (" requesting program: ", p)
+  print (" ...processing program: \033[7m",p,"\033[m")
   search = '(dc.type%20all%20%22'+type_req+'%22)'+provenance + p
   query = SRU + search
-  #print(query)
-  page = requests.get(query) # Getting page HTML through request
-  soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
-  te=int(soup.find("numberOfRecords").get_text())
-  print (te)
-  result.append(te)
-  searchs.append(search)
+  try:
+      page = requests.get(query) # Getting page HTML through request
+      soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
+      te=int(soup.find("numberOfRecords").get_text())
+      print (te)
+      result.append(te)
+      searchs.append(search)
+  except:
+      print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
+      sys.exit(-1)
+
 print (" ---------\n SRU query sample:", query)
 
 total = result[-1] # total number of documents
@@ -137,28 +133,33 @@ collection['data']['sru'] = result
 output_data(collection, args.type, "bnf_and_integrated")
 
 # Now querying OCRed documents
-print ("---------\nQuerying OCRed documents type:", type_req,"\n")
+print ("---------\nNow querying OCRed documents type:", type_req,"\n")
 i=0
 collection={}
 searchs=[]
+result_inner=[]
 
 for p in programs:
-  print ("  requesting program: ", p)
+  print ("  ...processing program: \033[7m", p,"\033[m")
   search = '(dc.type%20all%20%22'+type_req+'%22)%20and%20(ocr.quality%20all%20%22Texte%20disponible%22)' + provenance + p
   query = SRU + search
-  #print(query)
-  page = requests.get(query) # Getting page HTML through request
-  soup = BeautifulSoup(page.content, 'xml') # Parsing content using beautifulsoup
-  te=int(soup.find("numberOfRecords").get_text())
-  print (te)
-  result_inner.append(result[i] - te) # all - ocred
-  result_inner.append(te)
-  result_p.append(te)
-  searchs.append(search)
-  # creating labels
-  sources.append(' ')
-  sources.append(("OCR: \n{:.1f}%".format(te/result[i]*100)) if te/result[i] > 0.05 else '')
-  i+=1
+  try:
+      page = requests.get(query) # Getting page HTML through request
+      soup = BeautifulSoup(page.content, 'xml') # Parsing content with beautifulsoup
+      te=int(soup.find("numberOfRecords").get_text())
+      print (te)
+      result_inner.append(result[i] - te) # all - ocred
+      result_inner.append(te)
+      result_p.append(te)
+      searchs.append(search)
+      # creating labels
+      sources.append(' ')
+      sources.append(("OCR: \n{:.1f}%".format(te/result[i]*100)) if te/result[i] > 0.05 else '')
+      i+=1
+  except:
+      print("Wow, ", sys.exc_info()[0], " occurred!\n Maybe a API error, try again!")
+      sys.exit(-1)
+
 print (" ---------\n SRU query sample:", query)
 
 total_ocr = result_p[-1] # total number of documents with OCR
@@ -184,12 +185,11 @@ collection['data']['query']['total_p'] = total_ocr_p
 collection['data']['sru'] = result_p
 
 output_data(collection, args.type, "bnf_and_integrated_ocr")
-
 print (" ---------\n total documents:", total)
 
 
 if not(args.chart):
-    quit()
+    sys.exit(0)
 
 NUM_TYPES = len(programs)
 # set color theme

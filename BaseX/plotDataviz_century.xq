@@ -1,6 +1,9 @@
 (:
- Recherche de pages illustrees par les annotations
+  Produce a histogram by documents types and provenance
 :)
+
+import module namespace gd = "http:/gallicaviz.bnf.fr/" at "../webapp/dataviz_lib.xqm";
+import module namespace gdp = "http:/gallicaviz.bnf.fr/env" at "../webapp/dataviz_env.xqm";
 
 declare namespace functx = "http://www.functx.com";
 
@@ -9,106 +12,89 @@ declare option output:method 'html';
 (: Arguments avec valeurs par defaut :)
 (: cible de l'analyse :)
 declare variable $target as xs:string external := "full"  ;  (: full, bnf_and_integrated, bnf, partners, integrated, harvested  :)
+(: logarithm on y axis:)
 declare variable $log as xs:string external := "false" ;
-
-declare variable $types  := ("periodical", "monograph", "image", "manuscript", "music" )  ;
-declare variable $types_fr  := ("fascicule", "monographie", "image", "manuscrit", "partition")  ;
-
-declare variable $DBtarget as xs:string  := concat("gallica_century_", $target,"-monograph") ; 
-declare variable $DBprefix as xs:string := "gallica_century_" ;
-
-
 declare variable $locale as xs:string external := "fr" ; 
-
-(: convert source category to DB name:)
-declare variable $sourceName := map{
-    "BnF":"bnf", 
-    "intégrés":"integrated", 
-    "moissonnés":"harvested"
-   };
-      
-(: declare variable $currentDate as xs:date  := current-date(); :)
+declare variable $era as xs:integer external := 5  ; (: 1:antiquity, 2:m-a, 3:moderne, 4: contemporary, other: full  :)
 
 (: Parameters :)
-(: Pie colors :)
-declare variable $mainColor as xs:string := "#3b9db3" ; (: green  :) 
-declare variable $otherInnerColor as xs:string := "#B8B0AE" ; (: gray :)
-declare variable $innerColor := "red";
-declare variable $gallicaColors := map{
-    "periodical":"#128799", 
-    "monograph":"#149BB1", 
-    "manuscript":"#78B7B7", 
-    "music score":"#D6E9E9 ", 
-    "map":"#d5c6ba ", 
-    "image":"#a5846b", 
-    "object":"#c2ab9b", 
-    "sound":"#89A2B4", 
-    "video":"#D2E1EC"};
-            
-declare variable $other  as xs:string := if ($locale='fr') then ("autres") else ("other");
-declare variable $criteria as xs:string :=  if ($locale='fr') then ("Types") else ("Types") ; (: label of the graph criteria :)
-declare variable $width as xs:integer := 1250 ;
- 
-(: URL Gallica SRU de base :)
-declare variable $SRU as xs:string external := fn:escape-html-uri("https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&amp;exactSearch=false&amp;collapsing=false&amp;query=");
+declare variable $minWidth as xs:integer := 650  ; (: see supra :)
+declare variable $height as xs:integer := 630 ;
 
-declare function local:evalQuery($query) {
-    let $hits := xquery:eval($query)
-    return $hits
-};
+declare variable $DBtarget as xs:string  := concat("gallica_century_", $target,"-monograph") ;
+declare variable $DBprefix as xs:string := "gallica_century_" ;
 
-(: return a color for a given document type:)
-declare function local:columnColors($doc_type) {
-    let $foo := map:get( $gallicaColors, $doc_type)
-    return $foo
-};
-
+          
 (: construction de la page HTML :)
 declare function local:createOutput($db) {
 <html>
 {
 let $targetName := if ($locale='fr') then (data($db//source_fr)) else (data($db//source))
 let $processingDate := xs:date($db//date)
-let $date := if ($locale='fr') then (format-date($processingDate, "[D]-[M]-[Y]")) else (format-date($processingDate, "[Y]-[M]-[D]"))
-
-
+let $date := gd:date($processingDate,$locale)
 
 let $title := if ($locale='fr') then (concat ("Analyse par date de publication pour la provenance : ",$targetName)) else 
 (concat ("Analysis by publication date for provenance: ",$targetName))
-let $subTitle := if ($locale='fr') then (concat('Source : <a href="https://gallica.bnf.fr" target="_default">Gallica</a> et <a href="https://api.bnf.fr/fr/api-gallica-de-recherche" target="_default">API Gallica SRU</a> (', $date,')')) else (concat('Source: <a href="https://gallica.bnf.fr" target="_default">Gallica</a> and <a href="https://api.bnf.fr/fr/api-gallica-de-recherche" target="_default">Gallica SRU API</a> (', $date,')'))
+let $subTitle := if ($locale='fr') then (concat('Source : Gallica et API Gallica SRU (', $date,')')) else (concat('Source: Gallica and Gallica SRU API (', $date,')'))
 
-(: data :)
-let $centuries := $db//century/item
-let $totalData := count($centuries)
+(: data for centuries: 1th..21th :)
+let $centuries :=  if ($era=4)
+   then ($db//century/item[position() >18])
+   else if  ($era=1) then
+   ($db//century/item[position() <=5])
+   else if  ($era=2) then
+   ($db//century/item[position() >5  and position() <= 15])
+    else if  ($era=3) then
+   ($db//century/item[position() >15  and position() <= 18])
+   else ($db//century/item)
+         
+let $totalCenturies := count($centuries)
 
-let $dataCentury := for $c at $position in $centuries
- let $stringData := concat(' "',data ($c),'"',
-    (if ($position != $totalData) then ',') ,codepoints-to-string(10))
+let $centuriesString := for $c at $position in $centuries
+let $stringData := concat(' "',data ($c),gdp:suffix($locale),'"',
+    (if ($position != $totalCenturies) then ',') ,codepoints-to-string(10))
   return $stringData
 return
 
-let $collsData := for $t at $pos1 in $types
-  let $totalTypes := count($types)
-  let $DBname := concat($DBprefix,$target,"-",$types[$pos1])
-  let $db := collection($DBname)
-  let $centuryData := $db//sru/item 
+(: data per document types :)
+let $myTypes := gdp:types($era)
+let $totalTypes := count($myTypes)
+let $width := if ($era > 4) then (1300)
+   else (22 * $totalTypes * $totalCenturies)
+
+let $width := if ($width < $minWidth) then ($minWidth) else ($width)
+
+let $collsData := for $t at $pos1 in $myTypes
+  
+ let $DBname := concat($DBprefix,$target,"-",$myTypes[$pos1])
+ let $db := collection($DBname)
+ let $centuryData :=  if ($era=4)
+   then ($db//sru/item[position() >18])
+   else if  ($era=1) then
+   ($db//sru/item[position() <=5])
+   else if  ($era=2) then
+   ($db//sru/item[position() >5  and position() <= 15])
+    else if  ($era=3) then
+   ($db//sru/item[position() >15  and position() <= 18])
+   else ($db//sru/item)
+  
   let $total := $db//total
   let $totalF := $db//total_with_facet
-  let $totalData := count($centuryData)  
-  let $name := if ($locale='fr') then ($types_fr[$pos1]) else ($t)     
-  let $cover :=  $totalF div $totalData
+  (: let $totalData := count($centuryData) :)
+  
+  let $name := if ($locale='fr') then (gdp:types_fr($era)[$pos1]) else ($t)  
+  let $cover :=  $totalF div $totalCenturies
   let $urlTarget := $db//search/item
   let $stringData := concat(' {  
         name: "',$name,'",
-        color: "', local:columnColors($t), '",   
+        color: "', $gdp:gallicaTypesColors($t), '",   
         data: [ ',                             
            let $tmp := for $c at $pos2 in $centuryData 
-           let $url := concat($SRU, data($urlTarget[$pos2]))
+           let $url := concat($gdp:SRU, data($urlTarget[$pos2]))
             return concat('{ y: ', data($c), 
             ', total: ', $total, ', totalF: ', $totalF, 
-             ', url: "',$url, '"}',
-              
-              (if ($pos2 != $totalData) then ',') ,codepoints-to-string(10))
+             ', url: "',$url, '"}',             
+              (if ($pos2 != $totalCenturies) then ',') ,codepoints-to-string(10))
             return string-join($tmp,' '),        
       ']}',
       (if ($pos1 != $totalTypes) then ',') ,codepoints-to-string(10)
@@ -120,26 +106,71 @@ return
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
 <title>{$title}</title>
+<link rel="stylesheet" type="text/css" href="/static/dataviz.css"></link>
+<style>
+#container[data-id="1"] .highcharts-legend .highcharts-legend-item:first-child text {{
+  color: black !important;
+  fill: black !important;
+}}
+#container[data-id="1"] .highcharts-legend .highcharts-legend-item:first-child rect {{
+  display: none;
+}}
+.highcharts-description  {{
+    max-width: {$width}px;
+}}
+.highcharts-figure,
+.highcharts-data-table  {{
+    max-width: {$width}px;
+}}
+.scope-description  {{
+    max-width: {$width}px;
+}}
+</style>
 <script src="/static/he.js"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+
 <script type="text/javascript">
 $(function () {{
-  
 
+function formatNumbers (val,digits) {{
+  if (String('{$locale}') == 'fr') {{
+       sep = ' ' 
+       dec = ','  
+     }} else {{
+       sep = ',' 
+       dec = '.'
+     }}  
+  return Highcharts.numberFormat(val,digits,dec,sep)
+}};
+   
 $('#container').highcharts({{
 chart: {{
 	type: "column",
-  backgroundColor: "#EBEBEB",
-	spacingBottom: 30,
+  backgroundColor: "{$gdp:backgroundColor}",
+  spacingBottom: 30,
   spacingTop: 30,
   spacingLeft: 10,
   spacingRight: 10,
   // Explicitly tell the width and height of a chart
   width: {$width},
-  height: 630
+  height: {$height}
 }},
+legend: {{                
+       labelFormatter: function () {{
+           if (this.name=="{gdp:show($locale)}") {{
+                    return '<span style="color: gray">'+this.name+'</span>'
+                  }}
+                    else {{
+                      return this.name
+                    }}
+                }}
+              }},
 title: {{
-   margin: 50,
+   margin: {$gdp:marginTop},
    style: {{
             fontWeight: 'bold'
         }},
@@ -147,17 +178,35 @@ title: {{
 }},
 xAxis: {{
   categories: [
-      {$dataCentury} 
+      {$centuriesString} 
  ], 
  title: {{
-            text: 'Siècles'
+            text: '{gdp:century($locale)}'
+        }},
+        labels: {{
+            style: {{
+                fontWeight: 'bold'
+            }}
         }}
 }},
 yAxis: {{
-        {if ($log != 'false') then ("type: 'logarithmic',") else ()}
-        
+        {if ($log != 'false') then ("type: 'logarithmic',") else ()}       
         title: {{
             text: 'Documents'
+        }},
+        labels: {{
+            formatter: function () {{            
+            if (this.value == 0) {{
+                return 0}}
+            else if (Math.trunc(this.value / 1000000) != 0)  {{
+                   return formatNumbers(this.value / 1000000.0 , 1) + "M"
+               }}
+            else {{return formatNumbers(this.value / 1000.0 , 0) + "k"
+                        }}
+                      }},
+            style: {{
+                fontWeight: 'bold'
+            }}
         }}
     }},
 subtitle: {{
@@ -168,30 +217,43 @@ subtitle: {{
 		'{$subTitle}'
 }},
 tooltip: {{
-	formatter: function () {{ 
-     if (String('{$locale}') == 'fr') {{
-       sep = ' '
-       txt = " sur "
-       cv = " couverture date : "      
-     }} else {{
-       sep = ',' 
-       txt = " on "
-       cv = " date coverage: "
-     }}     
-     return  '<b style="color:' + this.series.color + '">' + this.series.name + '</b>' + ' : '+ '<b>' + Highcharts.numberFormat(this.point.y, 0, ',',sep) + "</b> (" + Highcharts.numberFormat(this.point.y/this.point.total * 100, 2, ',',sep) + " %)" + "<br></br>&#x2022; total: " + Highcharts.numberFormat(this.point.total, 0, ',',sep)  + "<br></br>&#x2022;" + cv + Highcharts.numberFormat(this.point.totalF/this.point.total *100, 0, ',',sep) + " %" ;
+	formatter: function () {{    
+     return  '<b style="color:' + this.series.color + '">' + this.series.name + '</b>' + '{gdp:colon($locale)}'+ '<b>' + formatNumbers(this.point.y,0) + "</b> (" + formatNumbers(this.point.y/this.point.total * 100,{$gdp:labelDigits}) + '{gdp:percent($locale)}' + ")" + "<br></br>&#x2022; total" + '{gdp:colon($locale)}' + formatNumbers(this.point.total,0)  + "<br></br>&#x2022;" + '{gdp:labelDate($locale)}' + '{gdp:colon($locale)}' + formatNumbers(this.point.totalF/this.point.total *100, 0) + '{gdp:percent($locale)}' ;
    }}
 }},
 
 plotOptions: {{
-  column: {{
+  column: {{events: {{
+              legendItemClick() {{
+                let chart = this.chart,
+                series = chart.series;
+                if (this.index === 0) {{
+                  if (chart.showHideFlag) {{
+                  for (let i = 1; i != 10; i++) {{                   
+                      series[i].hide()                     
+                   }}
+                  }} else {{
+                    for (let i = 1; i != 10; i++) {{                   
+                      series[i].show()                     
+                   }}                                   
+                 }}
+                chart.showHideFlag = !chart.showHideFlag;
+          }}
+       }}
+      }},
             pointPadding: 0.05,
             borderWidth: 1,
-            dataLabels: {{
-            enabled: true,
-            style: {{
-            fontWeight: 'normal',
-            fontSize: 8
-        }},
+            dataLabels: {{    // column labels
+             enabled: true,
+             formatter: function() {{
+              return formatNumbers(this.y,0)
+            }},
+             style: {{
+                    fontSize: {$gdp:labelTinySize},
+                    color: "{$gdp:labelColor}",
+                    textOutline: "{$gdp:labelOutline}" , 
+                    fontWeight: 'normal'
+            }},
         }}
         }},
   series: {{
@@ -212,118 +274,34 @@ plotOptions: {{
         }},
 
 }},
-series: [
+series: [{{
+    name: '{gdp:show($locale)}',
+    visible: false,
+    color: 'lightgray'  
+  }},
       {$collsData}      
-]
+       ]
     }});
 }});
 </script>
 </head>
 }
 <body>
-<style>
-.highcharts-description  {{
-    font-family: Lucida Grande;
-    margin: 10px auto;
-    text-align: center;
-    width: 100%;
-    max-width: {$width}px;
-}}
-.highcharts-figure,
-.highcharts-data-table  {{
-    min-width: 320px;
-    max-width: {$width}px;
-    margin: 1em auto;
-}}
-.scope-description  {{
-    font-family: Lucida Grande;
-    font-weight: bold;
-    background-color: #EBEBEB;
-    margin: 10px auto;
-    margin-top: -10px;
-    padding-top : 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    width: 100%;
-    max-width: {$width}px;
-}}
-.caption {{ color : gray }}
-.flag {{ width : 20px }}
-a {{ text-decoration: none }}
 
-.picto-item {{
-  position: relative;  /*les .picto-item deviennent référents*/
-  cursor: help;
-  border-radius: 50%;
-}}
 
-/* on génère un élément :after lors du survol et du focus :*/
 
-.picto-item:hover:after,
-.picto-item:focus:after {{
-  content: attr(aria-label);  /* on affiche aria-label */
-  position: absolute;
-  top: -2.4em;
-  left: 50%;
-	transform: translateX(-50%); /* on centre horizontalement  */
-  z-index: 1; /* pour s'afficher au dessus des éléments en position relative */
-  white-space: nowrap;  /* on interdit le retour à la ligne*/
-  padding: 5px 14px;
-  background: #413219;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 0.7rem;
-}}
-
-/* on génère un second élément en :before pour la flèche */
-
-[aria-label]:hover:before,
-[aria-label]:focus:before {{
-  content: "▼";
-  position: absolute;
-  top: -1em;
-	left: 50%;
-	transform: translateX(-50%); /* on centre horizontalement  */
-  font-size: 14px;
-  color: #413219;
-}}
-
-/* pas de contour durant le :focus */
-[aria-label]:focus {{
-  outline: none;
-}}
-
-.picto-item {{
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  margin: 3em 2em  1.5em  2e;
-  width: 1.2em;
-  height: 1.2em;
-  color: #413219;
-  background: #A0A0A0;
-  font-size: 0.95rem;
-  text-align: center;
-  text-decoration: none;
-}}
-</style>
-
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
 <figure class="highcharts-figure">
-	<div>
-    <div id="container"></div>
+<div>
+    <div id="container" data-id="1"></div>
 </div>
-{if ($locale='fr') then (<p class="scope-description">Collections : <a title ="Toute la collection Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=full&amp;locale=fr">Tout</a> &#x2022; <a title ="Les documents numériques de la BnF et de ses partenaires consultables dans Gallica"  href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=bnf_and_integrated&amp;locale=fr">BnF et intégrés</a> &#x2022; <a title="Les documents numériques de la BnF" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=bnf&amp;locale=fr">BnF</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF (intégrés et moissonnés)"  href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=partners&amp;locale=fr">partenaires</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF consultables dans Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=integrated&amp;locale=fr">intégrés</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF référencés dans Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=harvested&amp;locale=fr">moissonnés</a> </p> ) 
+{if ($locale='fr') then (<p class="scope-description">Collections : <a title ="Toute la collection Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=full&amp;era={$era}&amp;locale=fr">Complète</a> &#x2022; <a title ="Les documents numériques de la BnF et de ses partenaires consultables dans Gallica"  href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=bnf_and_integrated&amp;era={$era}&amp;locale=fr">BnF et intégrés</a> &#x2022; <a title="Les documents numériques de la BnF" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=bnf&amp;era={$era}&amp;locale=fr">BnF</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF (intégrés et moissonnés)"  href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=partners&amp;era={$era}&amp;locale=fr">partenaires</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF consultables dans Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=integrated&amp;locale=fr">intégrés</a> &#x2022; <a title ="Les documents numériques des partenaires de la BnF référencés dans Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=harvested&amp;era={$era}&amp;locale=fr">moissonnés</a> </p> ) 
 else
-(<p class="scope-description">Collections: <a title ="All the Gallica collection" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=full&amp;locale=en">Full</a> &#x2022; <a title ="Digital documents from BnF and its partners available in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=bnf_and_integrated&amp;locale=en">BnF and integrated</a> &#x2022; <a title ="Digital documents from BnF" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=bnf&amp;locale=en">BnF</a> &#x2022; <a title ="Digital documents from BnF&#8217;s partners (integrated and harvested)" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=partners&amp;locale=en">partners</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners available in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=integrated&amp;locale=en">integrated</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners listed in Gallica" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target=harvested&amp;locale=en">harvested</a></p>)}
+(<p class="scope-description">Collections: <a title ="All the Gallica collection" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=full&amp;locale=en">All</a> &#x2022; <a title ="Digital documents from BnF and its partners available in Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=bnf_and_integrated&amp;era={$era}&amp;locale=en">BnF and integrated</a> &#x2022; <a title ="Digital documents from BnF" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=bnf&amp;era={$era}&amp;locale=en">BnF</a> &#x2022; <a title ="Digital documents from BnF&#8217;s partners (integrated and harvested)" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=partners&amp;era={$era}&amp;locale=en">partners</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners available in Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=integrated&amp;era={$era}&amp;locale=en">integrated</a> &#x2022; <a title ="Digital documents from the BnF&#8217;s partners listed in Gallica" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target=harvested&amp;era={$era}&amp;locale=en">harvested</a></p>)}
 
 <p class="highcharts-description">
  {if ($locale='en') then (
-   <small class="caption"><a class="picto-item" aria-label="Source and documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁</a>  <a class="picto-item" aria-label="This graph analyses the distribution of document types according to the different provenances that make up Gallica." href="#">≡</a> <a  class="picto-item" aria-label="French" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;locale=fr">⚐</a> <a  class="picto-item" aria-label="Logarithmic scale" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;locale=en&amp;log=true">&#x1f4c8;</a></small>) else
-  (<small class="caption"><a class="picto-item" aria-label="Source et documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁ </a>  <a class="picto-item" aria-label="Ce graphe analyse la répartition par types de documents en fonction des différentes provenances constituant Gallica." href="#">≡</a> <a  class="picto-item" aria-label="English" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;locale=en">⚐</a> <a  class="picto-item" aria-label="Echelle logarithmique" href="http://localhost:8984/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;locale=fr&amp;log=true">&#x1f4c8;</a></small>)
+   <small class="caption"><a class="picto-item" aria-label="Source and documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁</a>  <a class="picto-item" aria-label="This graph analyses the distribution of document types according to the publication date." href="#">≡</a> <a  class="picto-item" aria-label="French" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;era={$era}&amp;locale=fr">⚐</a> <a  class="picto-item" aria-label="Logarithmic scale" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;&amp;era={$era};&amp;locale=en&amp;log=true">&#x1f4c8;</a></small>) else
+  (<small class="caption"><a class="picto-item" aria-label="Source et documentation" href="https://github.com/altomator/Gallica_Dataviz" target="_blank">☁ </a>  <a class="picto-item" aria-label="Ce graphe analyse la couverture temporelle (date de publication) de la collection par types de documents." href="#">≡</a> <a  class="picto-item" aria-label="English" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;era={$era}&amp;locale=en">⚐</a> <a  class="picto-item" aria-label="Echelle logarithmique" href="{$gdp:appPrefix}/rest?run=plotDataviz_century.xq&amp;target={$target}&amp;era={$era}&amp;locale=fr&amp;log=true">&#x1f4c8;</a></small>)
 }
  </p>
 </figure>
