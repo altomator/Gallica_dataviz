@@ -134,7 +134,7 @@ Usage:
 
 The BaseX subfolders includes a dynamic HTML rendition of the charts using the Highcharts JS library and the BaseX REST feature.
 
-1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
+1. A .sh script generates all the XML data with calls to the Python scripts described above. Then anoter Python script, `create_DB.py` populates some BaseX databases thanks to the BaseX [Python client](https://pypi.org/project/BaseXClient/).
 2. XQuery scripts can then generate the HTML pages (REST mode).
 
 
