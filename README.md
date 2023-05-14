@@ -122,7 +122,7 @@ Usage:
 >python3 sru_ocr.py -t monographie  # analysis of the whole collection
 ```
 
-![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_ocr/monographie_by_OCR.png)
+![analysis of the BnF + integrated partners collections](https://github.com/altomator/Gallica_dataviz/blob/main/histogram_by_century_ocr/monographie_by_OCR.png)
 
 *Analysis of the BnF + integrated partners collections*
 
